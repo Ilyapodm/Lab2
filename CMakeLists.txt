@@ -1,11 +1,13 @@
 cmake_minimum_required(VERSION 3.24)
-project(my_app CXX)
+project(lab2 CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_executable(my_app main.cpp)
-target_compile_options(my_app PRIVATE -Wall -Wextra)
+add_executable(lab2 
+                src/main.cpp)
+
+target_compile_options(lab2 PRIVATE -Wall -Wextra)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
