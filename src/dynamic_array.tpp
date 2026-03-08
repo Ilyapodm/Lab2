@@ -1,3 +1,5 @@
+#pragma once
+#include "dynamic_array.hpp"
 #include <stdexcept>
 
 template <typename T> 
@@ -94,7 +96,7 @@ void DynamicArray<T>::resize(int new_size) {
     if (new_size == capacity)  // nothing to do, already needed capacity 
         return;
 
-    T *new_data = new T[new_size];
+    T* new_data = (new_size > 0) ? new T[new_size] : nullptr;
 
     int items = (size < new_size) ? size : new_size;  // number of elements in the new data
 

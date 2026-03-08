@@ -23,7 +23,7 @@ public:
     void append(const T& item); 
     void prepend(const T& item);
     void insert_at(const T& item, int index);
-    LinkedList<T>* concat(LinkedList<T> *other) const; 
+    LinkedList<T>* concat(const LinkedList<T> *other) const; 
 
     ~LinkedList();
 

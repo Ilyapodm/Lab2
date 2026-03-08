@@ -24,7 +24,7 @@ public:
 private:
     T *data;
     int size;
-    int capacity;  // BUG в задании про capacity ничего не сказано, можно ли сделать?
+    int capacity;
 };
 
 #include "dynamic_array.tpp"

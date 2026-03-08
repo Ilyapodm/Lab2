@@ -1,3 +1,5 @@
+#pragma once
+#include "linked_list.hpp"
 #include <stdexcept>
 
 template <typename T>
@@ -5,10 +7,11 @@ LinkedList<T>::LinkedList() : head{nullptr}, tail{nullptr}, length{0} {}
 
 template <typename T>
 LinkedList<T>::LinkedList(T *items, int size) : head{nullptr}, tail{nullptr}, length{size} {
-    if (length <= 0) {
-        length = 0;
-        return;
-    }
+    if (size < 0)
+        throw std::invalid_argument("LinkedList: length cannot be negative");
+
+    if (items == nullptr && size > 0)
+        throw std::invalid_argument("LinkedList: items is nullptr");
 
     // create first Node (head and tail at the same time)
     head = new Node{.data = items[0], .next = nullptr};
@@ -21,45 +24,64 @@ LinkedList<T>::LinkedList(T *items, int size) : head{nullptr}, tail{nullptr}, le
 }
 
 template <typename T>
-LinkedList<T>::LinkedList(const LinkedList <T> &other) : head{nullptr}, tail{nullptr}, length{other.length} {
+LinkedList<T>::LinkedList(const LinkedList<T> &other) : head{nullptr}, tail{nullptr}, length{other.length} {
     if (length == 0) 
         return;
-
     // create first Node (head and tail at the same time)
-    head = new Node{.data = other.head->data, .next = nullptr};
-    tail = head;
-
-    Node *current_other_node = other.head;  
-    for (int i = 1; i < length; i++) {
-        current_other_node = current_other_node->next;  // move to next other's Node
-
-        tail->next = new Node{.data = current_other_node->data, .next = nullptr};  // create new Node (tail's next)
-        tail = tail->next;  // move tail to just created Node
+    try {
+        Node *src_node = other.head;
+        while (src_node != nullptr) {
+            append(src_node->data);
+            src_node = src_node->next;
+        }
+    } catch (...) {
+        Node *current_node = head;
+        while (current_node != nullptr) {
+            Node *temp_node = current_node;
+            current_node = current_node->next;
+            delete temp_node;
+        }
+        throw;
     }
 }
 
 template <class T>
 LinkedList<T>& LinkedList<T>::operator=(const LinkedList<T>& other) {
-    if (this == &other) return *this; // no self assignment
-    
-    // delete old Nodes
-    Node* current = head;
-    while (current != nullptr) {
-        Node* temp = current;
-        current = current->next;
-        delete temp;
+    if (this == &other) return *this;
+
+    // create new list first
+    Node* new_head = nullptr;
+    Node* new_tail = nullptr;
+    Node* src = other.head;
+    try {
+        while (src != nullptr) {
+            Node* node = new Node{.data = src->data, .next = nullptr};
+            if (!new_head) 
+                new_head = new_tail = node;
+            else { 
+                new_tail->next = node;
+                new_tail = node;
+            }
+            src = src->next;
+        }
+    } catch (...) {
+        // clear the broken list
+        while (new_head) {
+            Node* t = new_head;
+            new_head = new_head->next;
+            delete t;
+        }
+        throw;
     }
-    
-    // copy
-    head = tail = nullptr;
-    length = 0;
-    Node* current_node = other.head;
-    while (current_node != nullptr) {
-        append(current_node->data);
-        current_node = current_node->next;
-    }
+
+    // after all delete the old one
+    Node* curr = head;
+    while (curr) { Node* t = curr; curr = curr->next; delete t; }
+
+    head = new_head; tail = new_tail; length = other.length;
     return *this;
 }
+
 
 template <typename T>
 const T& LinkedList<T>::get_first() const {
@@ -113,9 +135,15 @@ LinkedList<T>* LinkedList<T>::get_sublist(int start_index, int end_index) const 
     for (int i = 0; i < start_index; i++)
         current_node = current_node->next;
 
-    for (int i = start_index; i <= end_index; i++) {
-        result->append(current_node->data);
-        current_node = current_node->next;
+    // append can fail on the 2, 3... iteration, list will be broken
+    try {
+        for (int i = start_index; i <= end_index; i++) {
+            result->append(current_node->data);
+            current_node = current_node->next;
+        }
+    } catch (...) {
+        delete result;
+        throw;
     }
 
     return result;
@@ -187,7 +215,7 @@ void LinkedList<T>::insert_at(const T& item, int index) {
 }
 
 template <typename T>
-LinkedList<T>* LinkedList<T>::concat(LinkedList<T> *other) const {
+LinkedList<T>* LinkedList<T>::concat(const LinkedList<T> *other) const {
     if (other == nullptr) {
         throw std::invalid_argument("concat: Other list is nullptr");
     }
@@ -196,16 +224,21 @@ LinkedList<T>* LinkedList<T>::concat(LinkedList<T> *other) const {
     
     Node *current_node = head;
 
-    for (int i = 0; i < length; i++) {
+    try {
+        for (int i = 0; i < length; i++) {
+            result->append(current_node->data);
+            current_node = current_node->next;
+        }
+
+        current_node = other->head;
+
+        for (int i = 0; i < other->length; i++) {
         result->append(current_node->data);
         current_node = current_node->next;
-    }
-
-    current_node = other->head;
-
-    for (int i = 0; i < other->length; i++) {
-        result->append(current_node->data);
-        current_node = current_node->next;
+        }
+    } catch (...){
+        delete result;
+        throw;
     }
 
     return result;
