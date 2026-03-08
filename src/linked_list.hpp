@@ -1,5 +1,3 @@
-// #ifndef LINKED_LIST_HPP
-// #define LINKED_LIST_HPP
 #pragma once
 
 template <typename T>
@@ -40,5 +38,3 @@ private:
 };
 
 #include "linked_list.tpp"
-
-//#endif  // LINKED_LIST_HPP

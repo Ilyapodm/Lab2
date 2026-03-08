@@ -1,5 +1,3 @@
-// #ifndef DYNAMIC_ARRAY_HPP
-// #define DYNAMIC_ARRAY_HPP
 #pragma once
 
 template <typename T>
@@ -28,5 +26,3 @@ private:
 };
 
 #include "dynamic_array.tpp"
-
-//#endif  // DYNAMIC_ARRAY_HPP
