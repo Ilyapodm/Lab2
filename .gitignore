@@ -1,6 +1,7 @@
 # Build  
 build/
 .cache/
+.changd
 
 # C++ Compiled artifacts
 *.d

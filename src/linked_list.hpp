@@ -20,4 +20,6 @@ public:
     LinkedList<T>* concat(LinkedList<T> *list); 
 };
 
+#include "linked_list.tpp"
+
 #endif  // LINKED_LIST_HPP

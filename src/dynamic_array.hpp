@@ -1,18 +1,29 @@
-#ifndef DYNAMIC_ARRAY_HPP
-#define DYNAMIC_ARRAY_HPP
+// #ifndef DYNAMIC_ARRAY_HPP
+// #define DYNAMIC_ARRAY_HPP
+
+#pragma once
 
 template <typename T>
 class DynamicArray {
 public:
-    DynamicArray(T* items, int count);
+    DynamicArray();
     DynamicArray(int size);
-    DynamicArray(const DynamicArray<T> &dynamic_array);
+    DynamicArray(T* items, int size);
+    DynamicArray(const DynamicArray<T> &other);
 
-    T get(int index);
-    int get_size();
+    T get(int index) const;
+    int get_size() const;
+    int get_capacity() const;
 
     void set(int index, T value);
     void resize(int new_size);
+
+private:
+    T *data;
+    int size;
+    int capacity;
 };
 
-#endif  // DYNAMIC_ARRAY_HPP
+#include "dynamic_array.tpp"
+
+//#endif  // DYNAMIC_ARRAY_HPP
