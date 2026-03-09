@@ -11,8 +11,8 @@ public:
     DynamicArray<T>& operator=(const DynamicArray<T> &other);
 
     const T& get(int index) const;
+    
     int get_size() const;
-    int get_capacity() const;
 
     void set(int index, const T& value);
     void resize(int new_size);
@@ -22,7 +22,6 @@ public:
 private:
     T *data;
     int size;
-    int capacity;
 };
 
 #include "dynamic_array.tpp"

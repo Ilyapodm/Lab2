@@ -1,15 +1,13 @@
-// #ifndef SEQUENCE_TPP
-// #define SEQUENCE_TPP
-
 #pragma once
 
-#include "dynamic_array.hpp"
 #include "sequence.hpp"
+#include "dynamic_array.hpp"
+#include "linked_list.hpp"
 #include <stdexcept>
 
 template <typename T>
 ArraySequence<T>::ArraySequence() : size{0} {
-    array = new DynamicArray<T>;
+    array = new DynamicArray<T>();
 }
 
 template <typename T>
@@ -22,4 +20,3 @@ ArraySequence<T>::ArraySequence(const DynamicArray<T> &array) {
     
 }
 
-// #endif // SEQUENCE_TPP

@@ -48,6 +48,7 @@ public:
     // TODO try_get... через Option
 
     int get_size() const override;
+    
 
     Sequence<T>* get_subsequence(int start_index, int end_index) override;
 
@@ -64,7 +65,6 @@ public:
 
 protected:
     DynamicArray<T> *array;
-    int size;
 };
 
 template <typename T>
