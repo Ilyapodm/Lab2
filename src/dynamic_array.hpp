@@ -13,6 +13,7 @@ public:
     const T& get(int index) const;
     
     int get_size() const;
+    int get_capacity() const;
 
     void set(int index, const T& value);
     void resize(int new_size);
@@ -21,7 +22,8 @@ public:
 
 private:
     T *data;
-    int size;
+    int size;      // means the number of elements + reachable ceils of array in memory
+    int capacity;  // all allocated ceils of array in memory
 };
 
 #include "dynamic_array.tpp"

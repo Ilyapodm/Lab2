@@ -17,7 +17,6 @@ public:
 
     LinkedList<T>* get_sublist(int start_index, int end_index) const;
     
-
     void append(const T& item); 
     void prepend(const T& item);
     void insert_at(const T& item, int index);

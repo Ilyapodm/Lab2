@@ -39,8 +39,6 @@ public:
     ArraySequence(T *items, int size);  // copy from given array
     ArraySequence (const DynamicArray<T> &array);
 
-    ~ArraySequence();
-
     const T& get_first() const override;  
     const T& get_last() const override;
     const T& get(int index) const override;
@@ -50,11 +48,11 @@ public:
     int get_size() const override;
     
 
-    Sequence<T>* get_subsequence(int start_index, int end_index) override;
+    Sequence<T>* get_subsequence(int start_index, int end_index) const override;
 
-    Sequence<T>* append(T item) override;
-    Sequence<T>* prepend(T item) override;
-    Sequence<T>* insert_at(T item, int index) override;
+    Sequence<T>* append(const T& item) override;
+    Sequence<T>* prepend(const T& item) override;
+    Sequence<T>* insert_at(const T& item, int index) override;
     Sequence <T>* concat(Sequence<T> *list) override;
 
     Sequence<T>* Map(T (*mapper)(const T& element)) override;
@@ -62,6 +60,8 @@ public:
     T Reduce(T (*reduce_func)(const T& first_element, const T& second_element, const T& start_element)) override;
 
     //TODO Итератор
+
+    ~ArraySequence();
 
 protected:
     DynamicArray<T> *array;
