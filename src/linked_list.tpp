@@ -14,6 +14,9 @@ LinkedList<T>::LinkedList(T *items, int size) : head{nullptr}, tail{nullptr}, le
     if (items == nullptr && size > 0)
         throw std::invalid_argument("LinkedList: items is nullptr");
 
+    if (size == 0) 
+        return;
+
     // create first Node (head and tail at the same time)
     head = new Node{.data = items[0], .next = nullptr};
     tail = head;
@@ -25,9 +28,10 @@ LinkedList<T>::LinkedList(T *items, int size) : head{nullptr}, tail{nullptr}, le
 }
 
 template <typename T>
-LinkedList<T>::LinkedList(const LinkedList<T> &other) : head{nullptr}, tail{nullptr}, length{other.length} {
-    if (length == 0) 
+LinkedList<T>::LinkedList(const LinkedList<T> &other) : head{nullptr}, tail{nullptr}, length{0} {
+    if (other.length == 0) 
         return;
+
     // create first Node (head and tail at the same time)
     try {
         Node *src_node = other.head;
@@ -42,6 +46,8 @@ LinkedList<T>::LinkedList(const LinkedList<T> &other) : head{nullptr}, tail{null
             current_node = current_node->next;
             delete temp_node;
         }
+
+        head = tail = nullptr;
         throw;
     }
 }
@@ -68,9 +74,9 @@ LinkedList<T>& LinkedList<T>::operator=(const LinkedList<T>& other) {
     } catch (...) {
         // clear the broken list
         while (new_head) {
-            Node* t = new_head;
+            Node* temp = new_head;
             new_head = new_head->next;
-            delete t;
+            delete temp;
         }
         throw;
     }
@@ -82,7 +88,6 @@ LinkedList<T>& LinkedList<T>::operator=(const LinkedList<T>& other) {
     head = new_head; tail = new_tail; length = other.length;
     return *this;
 }
-
 
 template <typename T>
 const T& LinkedList<T>::get_first() const {
@@ -149,7 +154,6 @@ LinkedList<T>* LinkedList<T>::get_sublist(int start_index, int end_index) const 
 
     return result;
 }
-
 
 template <typename T>
 void LinkedList<T>::append(const T& item) {

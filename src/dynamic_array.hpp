@@ -16,6 +16,7 @@ public:
     int get_capacity() const;
 
     void set(int index, const T& value);
+    
     void resize(int new_size);
 
     ~DynamicArray();
