@@ -12,12 +12,17 @@ ArraySequence<T>::ArraySequence() {
 
 template <typename T>
 ArraySequence<T>::ArraySequence(T *items, int size) {
-    array = new DynamicArray<T>(items, size);  //TODO сделать через конструктор дин массива
+    array = new DynamicArray<T>(items, size); 
 }
 
 template <typename T>
 ArraySequence<T>::ArraySequence(const DynamicArray<T> &array) {
     array = new DynamicArray<T>(array);
+}
+
+template <typename T>
+ArraySequence<T>::ArraySequence(const ArraySequence<T> &other) {
+    array = new DynamicArray<T>(*other.array);
 }
 
 template <typename T>
@@ -42,11 +47,15 @@ int ArraySequence<T>::get_size() const {
 
 template <typename T>
 Sequence<T>* ArraySequence<T>::get_subsequence(int start_index, int end_index) const {
-    if (start_index < 0 || end_index >= array->get_size() || start_index > end_index || array->get_size() == 0) 
+    if (start_index < 0 || end_index >= array->get_size() || start_index > end_index) 
         throw std::out_of_range("get_subsequence: index out of range");
 
-    ArraySequence<T>* result = new ArraySequence<T>();
+    // need this method because we don't know what (mutable/immutable) we are working with
+    ArraySequence<T>* result = empty_sequence();   
 
+    if (array->get_size() == 0) 
+        return result;
+    
     try {
         for (int i = start_index; i <= end_index; i++)
             result->append(array->get(i));
@@ -68,8 +77,8 @@ Sequence<T>* ArraySequence<T>::append(const T& item) {
 template <typename T>
 Sequence<T>* ArraySequence<T>::prepend(const T& item) {
     array->resize(array->get_size() + 1);
-    for (int i = array->get_size() - 1; i > 0; i--) {
-        array->set(i, array->get(i - 1));
+    for (int dst = array->get_size() - 1; dst > 0; dst--) {
+        array->set(dst, array->get(dst - 1));
     }
     array->set(0,  item);
     return this;
@@ -89,6 +98,18 @@ Sequence<T>* ArraySequence<T>::insert_at(const T& item, int index) {
         this->prepend(item);
         return this;
     }
-
     
+    array->resize(array->get_size() + 1);
+
+    for (int dst = get_size() - 1; dst > index; dst--) {
+        array->set(dst, array->get(dst - 1));
+    }
+
+    array->set(index, item);
+    return this;
+}
+
+template <typename T>
+Sequence<T>* ArraySequence<T>::concat(Sequence<T> *list) {
+
 }

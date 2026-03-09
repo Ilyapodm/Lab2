@@ -1,11 +1,13 @@
-// #ifndef SEQUENCE_HPP
-// #define SEQUENCE_HPP
-
 #pragma once
 
 #include "dynamic_array.hpp"
 #include "linked_list.hpp"
 #include "option.hpp"
+
+//TODO настроить в .tpp все методы для mutable/immutable array через instanсe
+//TODO написать все методы для linked list
+//TODO реализовать map, where, reduce
+//TODO сделать Option для try_get... 
 
 template <typename T>
 class Sequence {
@@ -38,6 +40,13 @@ public:
     ArraySequence();
     ArraySequence(T *items, int size);  // copy from given array
     ArraySequence (const DynamicArray<T> &array);
+    ArraySequence(const ArraySequence<T> &other);
+
+    virtual ArraySequence<T>* instance() = 0;  // returns who will be changed (copy or actually the object)
+
+    // need it because ArraySequence class is abstract (can't create objects), and in  
+    // the methods we don't know mutable or immutable objects we are working with
+    virtual ArraySequence<T>* empty_sequence() = 0;  // returns an empty Mutable or Immutable (array sequence)
 
     const T& get_first() const override;  
     const T& get_last() const override;
@@ -47,7 +56,6 @@ public:
 
     int get_size() const override;
     
-
     Sequence<T>* get_subsequence(int start_index, int end_index) const override;
 
     Sequence<T>* append(const T& item) override;
@@ -61,7 +69,9 @@ public:
 
     //TODO Итератор
 
-    ~ArraySequence();
+    ~ArraySequence() {
+        delete array;
+    }
 
 protected:
     DynamicArray<T> *array;
@@ -70,10 +80,16 @@ protected:
 template <typename T>
 class ListSequence : public Sequence<T> {
 public:
-    ListSequence(T *items, int size);  //copy from given list
     ListSequence();
+    ListSequence(T *items, int size);  //copy from given list
     ListSequence (const LinkedList<T> &list);
-    ~ListSequence(); // TODO подумать че с ним делать
+    ListSequence(const ListSequence<T>& other);  //TODO реализовать конструктор копирования
+    
+    virtual ListSequence<T>* instance() = 0;  // returns who will be changed (copy or actually the object) 
+
+    // need it because ArraySequence class is abstract (can't create objects), and in  
+    // the methods we don't know mutable or immutable objects we are working with
+    virtual ListSequence<T>* empty_sequence() = 0;  // returns an empty Mutable or Immutable list sequence
 
     const T& get_first() const override;  
     const T& get_last() const override;
@@ -96,32 +112,63 @@ public:
 
     // TODO Итератор
 
+    ~ListSequence() {
+        delete list;
+    }
+
 protected:
-    // TODO можно ли добавить size в список?
     LinkedList<T> *list;
 }; 
 
 template <typename T>
 class MutableArraySequence : ArraySequence<T> {
 public:
+    MutableArraySequence() : ArraySequence<T>() {}
+    MutableArraySequence(T *items, int size) : ArraySequence<T>(items, size) {}
+    MutableArraySequence(const DynamicArray<T> &array) : ArraySequence<T>(array) {}
+    MutableArraySequence(const ArraySequence<T> &other) : ArraySequence<T>(other) {}
+protected:
+    ArraySequence<T>* instance() override {
+        return this;  // return actually the object
+    }
 
+    ArraySequence<T>* empty_sequence() override {
+        return new MutableArraySequence<T>();
+    }
 };
 
 template <typename T>
 class ImmutableArraySequence : ArraySequence<T> {
 public:
+    ImmutableArraySequence() : ArraySequence<T>() {}
+    ImmutableArraySequence(T *items, int size) : ArraySequence<T>(items, size) {}
+    ImmutableArraySequence(const DynamicArray<T> &array) : ArraySequence<T>(array) {}
+    ImmutableArraySequence(const ArraySequence<T> &other) : ArraySequence<T>(other) {}
+protected:
+    ArraySequence<T>* instance() override {
+        return new ImmutableArraySequence<T>(*this);  // return the copy
+    }
 
+    ArraySequence<T>* empty_sequence() override {
+        return new ImmutableArraySequence<T>();
+    }
 };
 
 template <typename T>
 class MutableListSequence : ListSequence<T> {
 public:
+    ListSequence<T>* instance() override {
+        return this;
+    }
 
 };
 
 template <typename T>
 class ImmutableListSequence : ListSequence<T> {
 public:
+    ListSequence<T>* instance() override {
+        return this->clone();
+    }
 
 };
 
@@ -175,5 +222,3 @@ private:
 };
 
 #include "sequence.tpp"
-
-//#endif  //SEQUENCE_HPP
