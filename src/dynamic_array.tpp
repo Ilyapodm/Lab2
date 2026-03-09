@@ -24,19 +24,32 @@ DynamicArray<T>::DynamicArray(T *items, int size) : size{size}, capacity{size} {
     if (items == nullptr && size > 0)
         throw std::invalid_argument("DynamicArray: items is nullptr");
 
-    data = new T[size];
+    data = new T[size]{};  // do the initialization of items
 
-    for (int i = 0; i < size; i++) {
-        data[i] = items[i];
+    // fallback if the '=' operator for T will fall 
+    try{
+        for (int i = 0; i < size; i++) {
+            data[i] = items[i];
+        }
+    } catch (...) {
+        delete []data;
+        throw;
     }
+    
 }
 
 template <typename T>
 DynamicArray<T>::DynamicArray(const DynamicArray<T> &other) : size{other.size}, capacity{other.capacity} {
-    data = new T[capacity];
+    data = new T[capacity]{};  // do the initialization of items
 
-    for (int i = 0; i < size; i++) {
-        data[i] = other.data[i];
+    // fallback if the '=' operator for T will fall 
+    try {
+        for (int i = 0; i < size; i++) {
+            data[i] = other.data[i];
+        }
+    } catch (...) {
+        delete []data;
+        throw;
     }
 }
 
@@ -45,12 +58,20 @@ DynamicArray<T>& DynamicArray<T>::operator=(const DynamicArray<T> &other) {
     if (&other == this)  // no self assignment
         return *this;
 
-    T *new_data = new T[other.capacity]{};
+    // do not need 'try', 'new' is smart, if bad_alloc it will clear everything itself
+    T *new_data = new T[other.capacity]{};  // do the initialization of items
 
-    for (int i = 0; i < other.size; i++) {
-        new_data[i] = other.data[i];
+    // at first try to create new data and then only 'delete' the old
+    try {
+        for (int i = 0; i < other.size; i++) {
+            new_data[i] = other.data[i];
+        }
     }
-
+    catch (...) {
+        delete []new_data;
+        throw;
+    }
+    
     delete[] data;
     size = other.size;
     capacity = other.capacity;
@@ -88,12 +109,15 @@ void DynamicArray<T>::set(int index, const T& value) {
     data[index] = value;
 }
 
-// this allowes to change the size (new_size <= capacity) and change capacity else
+// changes the logic size of array (size).
+// capacity increases (*2) automatically if don't have enough.
+// does NOT decrease the capacity. Only if resize(0): totaly clear the buffer
 template <typename T>
 void DynamicArray<T>::resize(int new_size) {
     if (new_size < 0)
         throw std::invalid_argument("resize: new_size cannot be negative");
 
+    // totaly clears the buffer (data)
     if (new_size == 0) {
         delete []data;
         data = nullptr;
@@ -111,11 +135,16 @@ void DynamicArray<T>::resize(int new_size) {
     int new_capacity = (new_size > capacity* 2) ? new_size : capacity * 2;
     T* new_data = new T[new_capacity]{};
 
-
-    for (int i = 0; i < size; i++) {
-        new_data[i] = data[i];
+    // fallback if the '=' operator for T will fall 
+    try {
+        for (int i = 0; i < size; i++) {
+            new_data[i] = data[i];
+        }
+    } catch (...) {
+        delete []new_data;
+        throw;
     }
-
+    
     delete []data;
     data = new_data;
     size = new_size;
