@@ -2,7 +2,7 @@
 
 #include "sequence.hpp"
 #include "dynamic_array.hpp"
-#include "linked_list.hpp"
+// #include "linked_list.hpp"
 #include <stdexcept>
 
 template <typename T>
@@ -51,14 +51,17 @@ Sequence<T>* ArraySequence<T>::get_subsequence(int start_index, int end_index) c
         throw std::out_of_range("get_subsequence: index out of range");
 
     // need this method because we don't know what (mutable/immutable) we are working with
-    ArraySequence<T>* result = empty_sequence();   
+    ArraySequence<T> *result = this->empty_sequence();   
 
     if (array->get_size() == 0) 
         return result;
     
     try {
-        for (int i = start_index; i <= end_index; i++)
-            result->append(array->get(i));
+        for (int i = start_index; i <= end_index; i++){
+            // do not use append because it can create another copy for immutable
+            result->array->resize(result->array->get_size() + 1);
+            result->array->set(result->array->get_size() - 1, array->get(i));
+        }
     } catch (...) {
         delete result;
         throw;
@@ -69,19 +72,36 @@ Sequence<T>* ArraySequence<T>::get_subsequence(int start_index, int end_index) c
 
 template <typename T>
 Sequence<T>* ArraySequence<T>::append(const T& item) {
-    array->resize(array->get_size() + 1);
-    array->set(array->get_size(),  item);
-    return this;
+    ArraySequence<T> *inst = this->instance();  // make a copy
+
+    try {
+        inst->array->resize(array->get_size() + 1);  // resize a copy
+        inst->array->set(array->get_size() - 1,  item);
+    } catch (...) {
+        delete inst;
+        throw;
+    }
+    
+    return inst;
 }
 
 template <typename T>
 Sequence<T>* ArraySequence<T>::prepend(const T& item) {
-    array->resize(array->get_size() + 1);
-    for (int dst = array->get_size() - 1; dst > 0; dst--) {
-        array->set(dst, array->get(dst - 1));
+    ArraySequence<T> *inst = this->instance();
+
+    try{
+        inst->array->resize(array->get_size() + 1);
+        
+        for (int dst = inst->array->get_size() - 1; dst > 0; dst--) {
+            inst->array->set(dst, inst->array->get(dst - 1));
+        }
+        inst->array->set(0,  item);
+    } catch (...) {
+        delete inst;
+        throw;
     }
-    array->set(0,  item);
-    return this;
+
+    return inst;
 }
 
 template <typename T>
@@ -89,27 +109,62 @@ Sequence<T>* ArraySequence<T>::insert_at(const T& item, int index) {
     if (index < 0 || index > array->get_size())
         throw std::out_of_range("insert_at: index out of range");
 
-    if (index == array->get_size()) {
-        this->append(item);
-        return this;
-    }
+    ArraySequence<T> *inst = this->instance();
 
-    if (index == 0) {
-        this->prepend(item);
-        return this;
+    try {
+        if (index == inst->array->get_size()) {
+            // do not use append because it can create another copy for immutable
+            inst->array->resize(inst->array->get_size() + 1);
+            inst->array->set(inst->array->get_size() - 1, item);
+            return inst;
+        }
+
+        if (index == 0) {
+        // do not use prepend because it can create another copy    
+        inst->array->resize(array->get_size() + 1);
+        
+        for (int dst = inst->array->get_size() - 1; dst > 0; dst--) {
+            inst->array->set(dst, inst->array->get(dst - 1));
+        }
+        inst->array->set(0,  item);
+            return inst;
+        }
+    
+        inst->array->resize(array->get_size() + 1);
+
+        for (int dst = inst->get_size() - 1; dst > index; dst--) {
+            inst->array->set(dst, inst->array->get(dst - 1));
+        }
+
+        inst->array->set(index, item);
+    } catch (...) {
+        delete inst;
+        throw;
     }
     
-    array->resize(array->get_size() + 1);
-
-    for (int dst = get_size() - 1; dst > index; dst--) {
-        array->set(dst, array->get(dst - 1));
-    }
-
-    array->set(index, item);
-    return this;
+    return inst;
 }
 
 template <typename T>
-Sequence<T>* ArraySequence<T>::concat(Sequence<T> *list) {
+Sequence<T>* ArraySequence<T>::concat(Sequence<T> *other) {
+    ArraySequence<T> *result = this->empty_sequence();
 
+    try {
+        for (int i = 0; i < get_size(); i++) {
+            // do not use append because it can create another copy for immutable
+            result->array->resize(result->array->get_size() + 1);
+            result->array->set(result->array->get_size() - 1, array->get(i));
+        }
+
+        for (int i = 0; i < other->get_size(); i++) {
+            // do not use append because it can create another copy for immutable
+            result->array->resize(result->array->get_size() + 1);
+            result->array->set(result->array->get_size() - 1, other->array->get(i));
+        }
+    } catch (...) {
+        delete result;
+        throw;
+    }
+    
+    return result;
 }

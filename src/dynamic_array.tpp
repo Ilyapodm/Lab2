@@ -64,7 +64,7 @@ DynamicArray<T>& DynamicArray<T>::operator=(const DynamicArray<T> &other) {
     // at first try to create new data and then only 'delete' the old
     try {
         for (int i = 0; i < other.size; i++) {
-            new_data[i] = other.data[i];
+            new_data[i] = other.data[i];  // here can occur a bad alloc or smth
         }
     }
     catch (...) {
@@ -105,8 +105,8 @@ void DynamicArray<T>::set(int index, const T& value) {
     if (index >= size || index < 0) {
         throw std::out_of_range("set: Index out of range");
     }
-
-    data[index] = value;
+    
+    data[index] = value;  // do not use try-catch because 
 }
 
 // changes the logic size of array (size).

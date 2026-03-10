@@ -4,7 +4,6 @@
 #include "linked_list.hpp"
 #include "option.hpp"
 
-//TODO настроить в .tpp все методы для mutable/immutable array через instanсe
 //TODO написать все методы для linked list
 //TODO реализовать map, where, reduce
 //TODO сделать Option для try_get... 
@@ -22,16 +21,18 @@ public:
 
     virtual int get_size() const = 0;
 
-    virtual Sequence<T>* append(T item) = 0;
-    virtual Sequence<T>* prepend(T item) = 0;
-    virtual Sequence<T>* insert_at(T item, int index) = 0;
+    virtual Sequence<T>* append(const T& item) = 0;
+    virtual Sequence<T>* prepend(const T& item) = 0;
+    virtual Sequence<T>* insert_at(const T& item, int index) = 0;
     virtual Sequence<T>* concat(Sequence<T> *list) = 0;
 
     virtual Sequence<T>* Map(T (*mapper)(const T& element)) = 0;
     virtual Sequence<T>* Where(bool (*predicate)(const T& element)) = 0;
-    virtual T Reduce(T (*reduce_func)(const T& first_element, const T& second_element, const T& start_element)) = 0;
+    virtual T Reduce(T (*reduce_func)(const T& first_element, const T& second_element), const T& start_element) = 0;
 
     // IEnumerator<T> GetEnumerator();
+
+    virtual ~Sequence() {}
 };
 
 template <typename T>
@@ -61,11 +62,11 @@ public:
     Sequence<T>* append(const T& item) override;
     Sequence<T>* prepend(const T& item) override;
     Sequence<T>* insert_at(const T& item, int index) override;
-    Sequence <T>* concat(Sequence<T> *list) override;
+    Sequence <T>* concat(Sequence<T> *other) override;
 
     Sequence<T>* Map(T (*mapper)(const T& element)) override;
     Sequence<T>* Where(bool (*predicate)(const T& element)) override;
-    T Reduce(T (*reduce_func)(const T& first_element, const T& second_element, const T& start_element)) override;
+    T Reduce(T (*reduce_func)(const T& first_element, const T& second_element), const T& start_element) override;
 
     //TODO Итератор
 
@@ -99,7 +100,7 @@ public:
 
     int get_size() const override;
 
-    Sequence<T>* get_subsequence(int start_index, int end_index) override;
+    Sequence<T>* get_subsequence(int start_index, int end_index) const override;
 
     Sequence<T>* append(T item) override;
     Sequence<T>* prepend(T item) override;
@@ -108,7 +109,7 @@ public:
 
     Sequence<T>* Map(T (*mapper)(const T& element)) override;
     Sequence<T>* Where(bool (*predicate)(const T& element)) override;
-    T Reduce(T (*reduce_func)(const T& first_element, const T& second_element, const T& start_element)) override;
+    T Reduce(T (*reduce_func)(const T& first_element, const T& second_element), const T& start_element) override;
 
     // TODO Итератор
 
@@ -121,7 +122,7 @@ protected:
 }; 
 
 template <typename T>
-class MutableArraySequence : ArraySequence<T> {
+class MutableArraySequence : public ArraySequence<T> {
 public:
     MutableArraySequence() : ArraySequence<T>() {}
     MutableArraySequence(T *items, int size) : ArraySequence<T>(items, size) {}
@@ -138,7 +139,7 @@ protected:
 };
 
 template <typename T>
-class ImmutableArraySequence : ArraySequence<T> {
+class ImmutableArraySequence : public ArraySequence<T> {
 public:
     ImmutableArraySequence() : ArraySequence<T>() {}
     ImmutableArraySequence(T *items, int size) : ArraySequence<T>(items, size) {}
@@ -154,23 +155,23 @@ protected:
     }
 };
 
-template <typename T>
-class MutableListSequence : ListSequence<T> {
-public:
-    ListSequence<T>* instance() override {
-        return this;
-    }
+// template <typename T>
+// class MutableListSequence : public ListSequence<T> {
+// public:
+//     ListSequence<T>* instance() override {
+//         return this;
+//     }
 
-};
+// };
 
-template <typename T>
-class ImmutableListSequence : ListSequence<T> {
-public:
-    ListSequence<T>* instance() override {
-        return this->clone();
-    }
+// template <typename T>
+// class ImmutableListSequence : public ListSequence<T> {
+// public:
+//     ListSequence<T>* instance() override {
+//         return this->clone();
+//     }
 
-};
+// };
 
 class Bit {
 public:
