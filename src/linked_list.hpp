@@ -5,7 +5,7 @@ class LinkedList {
 public:
     LinkedList();
     LinkedList(T *items, int size);
-    LinkedList(const LinkedList<T> &list);
+    LinkedList(const LinkedList<T> &other);
 
     LinkedList& operator=(const LinkedList& other);
     

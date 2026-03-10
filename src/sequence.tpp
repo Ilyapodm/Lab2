@@ -2,8 +2,12 @@
 
 #include "sequence.hpp"
 #include "dynamic_array.hpp"
-// #include "linked_list.hpp"
+#include "linked_list.hpp"
 #include <stdexcept>
+
+/*******************************************************************
+ * ArraySequence
+ *******************************************************************/
 
 template <typename T>
 ArraySequence<T>::ArraySequence() {
@@ -39,6 +43,8 @@ template <typename T>
 const T& ArraySequence<T>::get(int index) const {
     return array->get(index);
 }
+
+// TODO try_get... через Option<T>
 
 template <typename T>
 int ArraySequence<T>::get_size() const {
@@ -149,3 +155,54 @@ Sequence<T>* ArraySequence<T>::concat(Sequence<T> *other) const {
     
     return result;
 }
+
+
+// TODO map, where, reduce для array_seq
+
+/*******************************************************************
+ * ListSequence
+ *******************************************************************/
+
+template <typename T>
+ListSequence<T>::ListSequence() {
+    list = new LinkedList<T>();
+}
+
+template <typename T>
+ListSequence<T>::ListSequence(T *items, int size) {
+    list = new LinkedList<T>(items, size);
+}
+
+template <typename T>
+ListSequence<T>::ListSequence(const LinkedList<T> &list) {
+    list = new LinkedList<T>(list);
+}
+
+template <typename T>
+ListSequence<T>::ListSequence(const ListSequence<T> &other) {
+    list = new LinkedList<T>(*other.list);
+}
+
+template <typename T>
+const T& ListSequence<T>::get_first() const {
+    return list->get_first();
+}
+
+template <typename T>
+const T& ListSequence<T>::get_last() const {
+    return list->get_last();
+}
+
+template <typename T>
+const T& ListSequence<T>::get(int index) const {
+    return list->get(index);
+}
+
+template <typename T>
+int ListSequence<T>::get_size() const {
+    return list->get_length();
+}
+
+//TODO append, prepend, insert, concat
+
+//TODO map, where, reduce

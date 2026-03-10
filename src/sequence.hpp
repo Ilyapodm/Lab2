@@ -17,9 +17,9 @@ public:
 
     // TODO try_get... через Option<T>
 
-    virtual Sequence<T>* get_subsequence(int start_index, int end_index) const = 0;
-
     virtual int get_size() const = 0;
+
+    virtual Sequence<T>* get_subsequence(int start_index, int end_index) const = 0;
 
     virtual Sequence<T>* append(const T& item) = 0;
     virtual Sequence<T>* prepend(const T& item) = 0;
@@ -30,7 +30,7 @@ public:
     virtual Sequence<T>* Where(bool (*predicate)(const T& element)) = 0;
     virtual T Reduce(T (*reduce_func)(const T& first_element, const T& second_element), const T& start_element) = 0;
 
-    // IEnumerator<T> GetEnumerator();
+    // TODO IEnumerator<T> GetEnumerator();
 
     virtual ~Sequence() {}
 };
@@ -84,13 +84,13 @@ public:
     ListSequence();
     ListSequence(T *items, int size);  //copy from given list
     ListSequence (const LinkedList<T> &list);
-    ListSequence(const ListSequence<T>& other);  //TODO реализовать конструктор копирования
+    ListSequence(const ListSequence<T>& other); 
     
     virtual ListSequence<T>* instance() = 0;  // returns who will be changed (copy or actually the object) 
 
     // need it because ArraySequence class is abstract (can't create objects), and in  
     // the methods we don't know mutable or immutable objects we are working with
-    virtual ListSequence<T>* empty_sequence() = 0;  // returns an empty Mutable or Immutable list sequence
+    virtual ListSequence<T>* empty_sequence() const = 0;  // returns an empty Mutable or Immutable list sequence
 
     const T& get_first() const override;  
     const T& get_last() const override;
@@ -155,71 +155,38 @@ protected:
     }
 };
 
-// template <typename T>
-// class MutableListSequence : public ListSequence<T> {
-// public:
-//     ListSequence<T>* instance() override {
-//         return this;
-//     }
-
-// };
-
-// template <typename T>
-// class ImmutableListSequence : public ListSequence<T> {
-// public:
-//     ListSequence<T>* instance() override {
-//         return this->clone();
-//     }
-
-// };
-
-class Bit {
+template <typename T>
+class MutableListSequence : public ListSequence<T> {
 public:
-    Bit() : value{false} {}
-    Bit(bool value) : value{value} {}
-    Bit(int value) : value{value != 0} {}
-
-    // AND
-    Bit operator&(const Bit& other) const {
-        return Bit(value && other.value);
+    MutableListSequence() : ListSequence<T>() {}
+    MutableListSequence(T *items, int size) : ListSequence<T>(items, size) {}
+    MutableListSequence(const LinkedList<T> &list) : ListSequence<T>(list) {}
+    MutableListSequence(const ListSequence<T> &other) : ListSequence<T>(other) {}
+protected:
+    ListSequence<T>* instance() override {
+        return this;  // return actually the object
     }
 
-    // OR
-    Bit operator|(const Bit& other) const {
-        return Bit(value || other.value);
+    ListSequence<T>* empty_sequence() const override {
+        return new MutableListSequence<T>();
     }
-
-    // XOR
-    Bit operator^(const Bit& other) const {
-        return Bit(value != other.value);
-    }
-
-    // NOT
-    Bit operator~() const {
-        return Bit(!value);
-    }
-
-    bool operator==(const Bit& other) const {
-        return value == other.value;
-    }
-
-    bool operator!=(const Bit& other) const {
-        return value != other.value;
-    }
-
-private:
-    bool value;
 };
 
-class BitSequence {
+template <typename T>
+class ImmutableListSequence : public ListSequence<T> {
 public:
-    // TODO конструктор
+    ImmutableListSequence() : ListSequence<T>() {}
+    ImmutableListSequence(T *items, int size) : ListSequence<T>(items, size) {}
+    ImmutableListSequence(const LinkedList<T> &list) : ListSequence<T>(list) {}
+    ImmutableListSequence(const ListSequence<T> &other) : ListSequence<T>(other) {}
+protected:
+    ListSequence<T>* instance() override {
+        return new ImmutableListSequence<T>(*this);  // return the copy
+    }
 
-    BitSequence* operator&(const BitSequence& other) const;
-    BitSequence* operator|(const BitSequence& other) const;
-
-private:
-    Sequence<Bit> *sequence;
+    ListSequence<T>* empty_sequence() const override {
+        return new ImmutableListSequence<T>();
+    }
 };
 
 #include "sequence.tpp"
