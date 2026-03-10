@@ -24,7 +24,7 @@ public:
     virtual Sequence<T>* append(const T& item) = 0;
     virtual Sequence<T>* prepend(const T& item) = 0;
     virtual Sequence<T>* insert_at(const T& item, int index) = 0;
-    virtual Sequence<T>* concat(Sequence<T> *list) = 0;
+    virtual Sequence<T>* concat(Sequence<T> *list) const = 0;
 
     virtual Sequence<T>* Map(T (*mapper)(const T& element)) = 0;
     virtual Sequence<T>* Where(bool (*predicate)(const T& element)) = 0;
@@ -43,11 +43,11 @@ public:
     ArraySequence (const DynamicArray<T> &array);
     ArraySequence(const ArraySequence<T> &other);
 
-    virtual ArraySequence<T>* instance() = 0;  // returns who will be changed (copy or actually the object)
+    virtual ArraySequence<T>* instance() const = 0;  // returns who will be changed (copy or actually the object)
 
     // need it because ArraySequence class is abstract (can't create objects), and in  
     // the methods we don't know mutable or immutable objects we are working with
-    virtual ArraySequence<T>* empty_sequence() = 0;  // returns an empty Mutable or Immutable (array sequence)
+    virtual ArraySequence<T>* empty_sequence() const = 0;  // returns an empty Mutable or Immutable (array sequence)
 
     const T& get_first() const override;  
     const T& get_last() const override;
@@ -62,7 +62,7 @@ public:
     Sequence<T>* append(const T& item) override;
     Sequence<T>* prepend(const T& item) override;
     Sequence<T>* insert_at(const T& item, int index) override;
-    Sequence <T>* concat(Sequence<T> *other) override;
+    Sequence <T>* concat(Sequence<T> *other) const override;
 
     Sequence<T>* Map(T (*mapper)(const T& element)) override;
     Sequence<T>* Where(bool (*predicate)(const T& element)) override;
@@ -105,7 +105,7 @@ public:
     Sequence<T>* append(T item) override;
     Sequence<T>* prepend(T item) override;
     Sequence<T>* insert_at(T item, int index) override;
-    Sequence <T>* concat(Sequence<T> *list) override;
+    Sequence <T>* concat(Sequence<T> *list) const override;
 
     Sequence<T>* Map(T (*mapper)(const T& element)) override;
     Sequence<T>* Where(bool (*predicate)(const T& element)) override;
@@ -133,7 +133,7 @@ protected:
         return this;  // return actually the object
     }
 
-    ArraySequence<T>* empty_sequence() override {
+    ArraySequence<T>* empty_sequence() const override {
         return new MutableArraySequence<T>();
     }
 };
@@ -150,7 +150,7 @@ protected:
         return new ImmutableArraySequence<T>(*this);  // return the copy
     }
 
-    ArraySequence<T>* empty_sequence() override {
+    ArraySequence<T>* empty_sequence() const override {
         return new ImmutableArraySequence<T>();
     }
 };
