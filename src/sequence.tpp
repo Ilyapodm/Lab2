@@ -3,7 +3,42 @@
 #include "sequence.hpp"
 #include "dynamic_array.hpp"
 #include "linked_list.hpp"
+#include "option.hpp"
 #include <stdexcept>
+
+/*******************************************************************
+ * Sequence
+ *******************************************************************/
+
+// using const links for the object of exception
+template <typename T>
+Option<T> Sequence<T>::try_get_first() const {
+    try {
+        return Option<T>::Some(this->get_first());
+    } catch (const std::out_of_range&) {
+        return Option<T>::None();
+    }
+}
+
+
+template <typename T>
+Option<T> Sequence<T>::try_get_last() const {
+    try {
+        return Option<T>::Some(this->get_last());
+    } catch (const std::out_of_range&) {
+        return Option<T>::None();
+    }
+}
+
+
+template <typename T>
+Option<T> Sequence<T>::try_get(int index) const {
+    try {
+        return Option<T>::Some(this->get(index));
+    } catch (const std::out_of_range&) {
+        return Option<T>::None();
+    }
+}
 
 /*******************************************************************
  * ArraySequence
@@ -43,8 +78,6 @@ template <typename T>
 const T& ArraySequence<T>::get(int index) const {
     return array->get(index);
 }
-
-// TODO try_get... через Option<T>
 
 template <typename T>
 int ArraySequence<T>::get_size() const {

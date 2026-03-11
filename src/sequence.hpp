@@ -4,9 +4,7 @@
 #include "linked_list.hpp"
 #include "option.hpp"
 
-//TODO написать все методы для linked list
 //TODO реализовать map, where, reduce
-//TODO сделать Option для try_get... 
 
 template <typename T>
 class Sequence {
@@ -15,7 +13,9 @@ public:
     virtual const T& get_last() const = 0;
     virtual const T& get(int index) const = 0;
 
-    // TODO try_get... через Option<T>
+    Option<T> try_get_first() const;
+    Option<T> try_get_last() const;
+    Option<T> try_get(int index) const;
 
     virtual int get_size() const = 0;
 
@@ -52,8 +52,6 @@ public:
     const T& get_first() const override;  
     const T& get_last() const override;
     const T& get(int index) const override;
-
-    // TODO try_get... через Option
 
     int get_size() const override;
     
@@ -95,8 +93,6 @@ public:
     const T& get_first() const override;  
     const T& get_last() const override;
     const T& get(int index) const override;
-
-    // TODO try_get... через Option
 
     int get_size() const override;
 
