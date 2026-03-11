@@ -17,13 +17,25 @@ LinkedList<T>::LinkedList(T *items, int size) : head{nullptr}, tail{nullptr}, le
     if (size == 0) 
         return;
 
-    // create first Node (head and tail at the same time)
-    head = new Node{.data = items[0], .next = nullptr};
-    tail = head;
+    try {
+        // create first Node (head and tail at the same time)
+        head = new Node{.data = items[0], .next = nullptr};
+        tail = head;
 
-    for (int i = 1; i < size; i++) {
-        tail->next = new Node{.data = items[i], .next = nullptr};  // create new Node (tail's next)
-        tail = tail->next;  // move tail to just created Node
+        for (int i = 1; i < size; i++) {
+            // can fail on 2, 3... iteration
+            tail->next = new Node{.data = items[i], .next = nullptr};  // create new Node (tail's next)
+            tail = tail->next;  // move tail to just created Node
+        }
+    } catch(...) {
+        Node *current_node = head;
+        while (current_node != nullptr) {
+            Node *temp_node = current_node;
+            current_node = current_node->next;
+            delete temp_node;
+        }
+        head = tail = nullptr;
+        throw;
     }
 }
 

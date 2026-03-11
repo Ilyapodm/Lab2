@@ -43,7 +43,7 @@ public:
     ArraySequence (const DynamicArray<T> &array);
     ArraySequence(const ArraySequence<T> &other);
 
-    virtual ArraySequence<T>* instance() const = 0;  // returns who will be changed (copy or actually the object)
+    virtual ArraySequence<T>* instance() = 0;  // returns who will be changed (copy or actually the object)
 
     // need it because ArraySequence class is abstract (can't create objects), and in  
     // the methods we don't know mutable or immutable objects we are working with
@@ -59,14 +59,14 @@ public:
     
     Sequence<T>* get_subsequence(int start_index, int end_index) const override;
 
-    Sequence<T>* append(const T& item) override;
-    Sequence<T>* prepend(const T& item) override;
-    Sequence<T>* insert_at(const T& item, int index) override;
+    Sequence<T>* append(const T &item) override;
+    Sequence<T>* prepend(const T &item) override;
+    Sequence<T>* insert_at(const T &item, int index) override;
     Sequence <T>* concat(Sequence<T> *other) const override;
 
-    Sequence<T>* Map(T (*mapper)(const T& element)) override;
-    Sequence<T>* Where(bool (*predicate)(const T& element)) override;
-    T Reduce(T (*reduce_func)(const T& first_element, const T& second_element), const T& start_element) override;
+    Sequence<T>* Map(T (*mapper)(const T &element)) override;
+    Sequence<T>* Where(bool (*predicate)(const T &element)) override;
+    T Reduce(T (*reduce_func)(const T &first_element, const T &second_element), const T &start_element) override;
 
     //TODO Итератор
 
@@ -84,7 +84,7 @@ public:
     ListSequence();
     ListSequence(T *items, int size);  //copy from given list
     ListSequence (const LinkedList<T> &list);
-    ListSequence(const ListSequence<T>& other); 
+    ListSequence(const ListSequence<T> &other); 
     
     virtual ListSequence<T>* instance() = 0;  // returns who will be changed (copy or actually the object) 
 
@@ -102,14 +102,14 @@ public:
 
     Sequence<T>* get_subsequence(int start_index, int end_index) const override;
 
-    Sequence<T>* append(T item) override;
-    Sequence<T>* prepend(T item) override;
-    Sequence<T>* insert_at(T item, int index) override;
-    Sequence <T>* concat(Sequence<T> *list) const override;
+    Sequence<T>* append(const T &item) override;
+    Sequence<T>* prepend(const T &item) override;
+    Sequence<T>* insert_at(const T &item, int index) override;
+    Sequence<T>* concat(Sequence<T> *other) const override;
 
-    Sequence<T>* Map(T (*mapper)(const T& element)) override;
-    Sequence<T>* Where(bool (*predicate)(const T& element)) override;
-    T Reduce(T (*reduce_func)(const T& first_element, const T& second_element), const T& start_element) override;
+    Sequence<T>* Map(T (*mapper)(const T &element)) override;
+    Sequence<T>* Where(bool (*predicate)(const T &element)) override;
+    T Reduce(T (*reduce_func)(const T &first_element, const T &second_element), const T &start_element) override;
 
     // TODO Итератор
 

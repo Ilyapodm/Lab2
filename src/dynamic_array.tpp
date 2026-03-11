@@ -106,7 +106,7 @@ void DynamicArray<T>::set(int index, const T& value) {
         throw std::out_of_range("set: Index out of range");
     }
     
-    data[index] = value;  // do not use try-catch because 
+    data[index] = value;  
 }
 
 // changes the logic size of array (size).
