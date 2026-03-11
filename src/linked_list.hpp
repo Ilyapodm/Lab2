@@ -1,11 +1,20 @@
 #pragma once
 
+#include "ienumerator.hpp"
+
 template <typename T>
 class LinkedList {
+private:  // here for enumerator
+    struct Node {
+        T data;
+        Node *next;
+    };
+
 public:
     LinkedList();
     LinkedList(T *items, int size);
     LinkedList(const LinkedList<T> &other);
+    ~LinkedList();
 
     LinkedList& operator=(const LinkedList& other);
     
@@ -22,16 +31,27 @@ public:
     void insert_at(const T &item, int index);
     LinkedList<T>* concat(const LinkedList<T> *other) const; 
 
-    ~LinkedList();
+    // caller owns, must delete
+    IEnumerator<T>* get_enumerator() const;
 
-    
+    // nested class for enumerator
+    class ListEnumerator : public IEnumerator<T> {
+    public:
+        ListEnumerator(const LinkedList<T> *linked_list) : linked_list{linked_list}, current_node{nullptr}, index{-1} {}
 
-private:
-    struct Node {
-        T data;
-        Node *next;
+        bool move_next() override;  // move to next element
+                
+        const T& get_current() const override;  // get current item
+
+        void reset() override;  // move to the beginning
+
+    private:
+        int index;
+        const Node *current_node;
+        const LinkedList<T> *linked_list;
     };
 
+private:
     int length; 
 
     Node *head;

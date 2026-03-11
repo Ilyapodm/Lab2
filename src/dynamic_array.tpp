@@ -54,6 +54,11 @@ DynamicArray<T>::DynamicArray(const DynamicArray<T> &other) : size{other.size}, 
 }
 
 template <typename T>
+DynamicArray<T>::~DynamicArray() {
+    delete []data;
+}
+
+template <typename T>
 DynamicArray<T>& DynamicArray<T>::operator=(const DynamicArray<T> &other) {
     if (&other == this)  // no self assignment
         return *this;
@@ -149,9 +154,4 @@ void DynamicArray<T>::resize(int new_size) {
     data = new_data;
     size = new_size;
     capacity = new_capacity;
-}
-
-template <typename T>
-DynamicArray<T>::~DynamicArray() {
-    delete []data;
 }

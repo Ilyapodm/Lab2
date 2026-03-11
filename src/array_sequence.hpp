@@ -10,6 +10,8 @@ public:
     ArraySequence(T *items, int size);  // copy from given array
     ArraySequence (const DynamicArray<T> &array);
     ArraySequence(const ArraySequence<T> &other);
+    ~ArraySequence() { delete array; }
+
     //TODO реализовать оператор присваивания
 
     virtual ArraySequence<T>* instance() = 0;  // returns who will be changed (copy or actually the object)
@@ -35,10 +37,6 @@ public:
     Sequence<T>* Where(bool (*predicate)(const T &element)) override;
     T Reduce(T (*reduce_func)(const T &first_element, const T &second_element), const T &start_element) override;
 
-    ~ArraySequence() {
-        delete array;
-    }
-
     // nested class for enumerator
     class ArrayEnumerator : public IEnumerator<T> {
     public:
@@ -55,7 +53,7 @@ public:
         const ArraySequence<T> *array_sequence;
     };
 
-    // user have to use "delete"
+    // caller owns, must delete
     IEnumerator<T>* get_enumerator() const override;
 
 protected:

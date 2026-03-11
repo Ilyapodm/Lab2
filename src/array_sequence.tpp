@@ -152,6 +152,10 @@ Sequence<T>* ArraySequence<T>::concat(Sequence<T> *other) const {
     return result;
 }
 
+/*******************************************************************
+ * Map, Where, Reduce
+ *******************************************************************/
+
 //TODO Нужно сначала сделать итератор, для обхода последовательности
 // template <typename T>
 // Sequence<T>* ArraySequence<T>::Map(T (*mapper)(const T &element)) {

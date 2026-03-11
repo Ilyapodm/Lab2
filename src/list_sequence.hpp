@@ -10,6 +10,8 @@ public:
     ListSequence(T *items, int size);  //copy from given list
     ListSequence (const LinkedList<T> &list);
     ListSequence(const ListSequence<T> &other); 
+    ~ListSequence() { delete list; }
+
     //TODO реализовать оператор присваивания
     
     virtual ListSequence<T>* instance() = 0;  // returns who will be changed (copy or actually the object) 
@@ -35,12 +37,10 @@ public:
     Sequence<T>* Where(bool (*predicate)(const T &element)) override;
     T Reduce(T (*reduce_func)(const T &first_element, const T &second_element), const T &start_element) override;
 
-    // TODO Итератор
-    IEnumerator<T>* get_enumerator() const override;
+    // caller owns, must delete
+    IEnumerator<T>* get_enumerator() const override { return this->list->get_enumerator(); }
 
-    ~ListSequence() {
-        delete list;
-    }
+    
 
 protected:
     LinkedList<T> *list;

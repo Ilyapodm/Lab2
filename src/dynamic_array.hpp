@@ -7,6 +7,7 @@ public:
     DynamicArray(int size);
     DynamicArray(T* items, int size);
     DynamicArray(const DynamicArray<T> &other);
+    ~DynamicArray();
 
     DynamicArray<T>& operator=(const DynamicArray<T> &other);
 
@@ -18,9 +19,7 @@ public:
     void set(int index, const T& value);
     
     void resize(int new_size);
-
-    ~DynamicArray();
-
+    
 private:
     T *data;
     int size;      // means the number of elements + reachable ceils of array in memory

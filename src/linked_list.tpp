@@ -64,6 +64,17 @@ LinkedList<T>::LinkedList(const LinkedList<T> &other) : head{nullptr}, tail{null
     }
 }
 
+template <typename T>
+LinkedList<T>::~LinkedList() {
+    Node *current_node = head;
+
+    while (current_node != nullptr) {
+        Node* temp = current_node;
+        current_node = current_node->next;
+        delete temp;
+    }
+}
+
 template <class T>
 LinkedList<T>& LinkedList<T>::operator=(const LinkedList<T>& other) {
     if (this == &other) return *this;
@@ -261,13 +272,35 @@ LinkedList<T>* LinkedList<T>::concat(const LinkedList<T> *other) const {
     return result;
 }
 
-template <typename T>
-LinkedList<T>::~LinkedList() {
-    Node *current_node = head;
+/*******************************************************************
+ * Enumerator
+ *******************************************************************/
 
-    while (current_node != nullptr) {
-        Node* temp = current_node;
-        current_node = current_node->next;
-        delete temp;
+template <typename T>
+IEnumerator<T>* LinkedList<T>::get_enumerator() const {
+        return new ListEnumerator(this);
     }
+
+template <typename T>
+bool LinkedList<T>::ListEnumerator::move_next() {
+    if (index == -1)
+        current_node = linked_list->head;
+    else
+        current_node = current_node->next;
+    
+    index++;
+    return current_node != nullptr;
+}
+
+template <typename T>
+const T& LinkedList<T>::ListEnumerator::get_current() const {
+    if (index < 0 || index >= linked_list->get_length())
+        throw std::out_of_range("get_current(): called in invalid state");
+    return current_node->data;
+}
+
+template <typename T>
+void LinkedList<T>::ListEnumerator::reset() {
+    index = -1;
+    current_node = nullptr;
 }
