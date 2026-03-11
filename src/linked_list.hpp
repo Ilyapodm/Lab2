@@ -24,6 +24,8 @@ public:
 
     ~LinkedList();
 
+    
+
 private:
     struct Node {
         T data;
