@@ -46,6 +46,8 @@ public:
                 
         const T& get_current() const override;  // get current item
 
+        void set_current(const T &value) override;  // set current item
+
         void reset() override;  // move to the beginning
 
     private:

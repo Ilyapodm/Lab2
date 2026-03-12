@@ -218,6 +218,11 @@ const T& ArraySequence<T>::ArrayEnumerator::get_current() const {
 }
 
 template <typename T>
+void ArraySequence<T>::ArrayEnumerator::set_current(const T &value) {
+    array_sequence->array->set(index, value);
+}
+
+template <typename T>
 void ArraySequence<T>::ArrayEnumerator::reset() {
     index = -1;
 }

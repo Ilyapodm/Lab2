@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ienumerator.hpp"
 #include "list_sequence.hpp"
 #include "linked_list.hpp"
 #include <stdexcept>
@@ -151,21 +152,44 @@ Sequence<T>* ListSequence<T>::concat(Sequence<T> *other) const {
  * Map, Where, Reduce
  *******************************************************************/
 
-// template <typename T>
-// Sequence<T>* ListSequence<T>::Map(T (*mapper)(const T &element)) {
-//     ListSequence<T> *inst = instance();
+template <typename T>
+Sequence<T>* ListSequence<T>::Map(T (*mapper)(const T &element)) {
+    ListSequence<T> *inst = this->instance();
 
-//     for (int i = 0; i < inst->get_size(); i++) {
-//         inst->list->
-//     }
-// }
+    IEnumerator<T>* inst_iter = inst->get_enumerator();  // use enumerator not to repeat "get" and "set" loop
 
-// template <typename T>
-// Sequence<T>* ListSequence<T>::Where(bool (*predicate)(const T &element)) {
+    while (inst_iter->move_next()) {
+        inst_iter->set_current( mapper(inst_iter->get_current()));
+    }
 
-// }
+    delete inst_iter;
 
-// template <typename T>
-// T ListSequence<T>::Reduce(T (*reduce_func)(const T &first_element, const T &second_element), const T &start_element) {
+    return inst;
+}
 
-// }
+template <typename T>
+Sequence<T>* ListSequence<T>::Where(bool (*predicate)(const T &element)) {
+    // "set_current" doesn't have the needed access to the list:
+    // it can't delete nodes, change the structure of the list
+    // so "where" delegates it to "filter" in "linked_list", to do it quick 
+    ListSequence<T> *inst = this->instance();
+    
+    inst->list->filter(predicate);
+
+    return inst;
+}
+
+template <typename T>
+T ListSequence<T>::Reduce(T (*reduce_func)(const T &first_element, const T &second_element), const T &start_element) {
+    T result = start_element;
+
+    IEnumerator<T>* this_iter = get_enumerator();  // use enumerator not to repeat "get" loop
+
+    while(this_iter->move_next()) {
+        result = reduce_func(this_iter->get_current(), result);  // usually start_element is the 1 arg
+    }
+
+    delete this_iter;
+
+    return result;
+}

@@ -320,6 +320,29 @@ LinkedList<T>* LinkedList<T>::concat(const LinkedList<T> *other) const {
     return result;
 }
 
+template <typename T>
+void LinkedList<T>::filter(bool (*predicate)(const T&)) {
+    Node *previous_node = nullptr;
+    Node *current_node = head;
+
+    while (current_node != nullptr) {
+        Node *next = current_node->next;
+        if (predicate(current_node->data)) {
+            previous_node = current_node;
+        } 
+        else {
+            if (previous_node) 
+                previous_node->next = next;
+            else 
+                head = next;  
+            delete current_node;
+            length--;
+        }
+        current_node = next;
+    }
+    tail = previous_node;  
+}
+
 /*******************************************************************
  * Enumerator
  *******************************************************************/
@@ -345,6 +368,11 @@ const T& LinkedList<T>::ListEnumerator::get_current() const {
     if (index < 0 || index >= linked_list->get_length())
         throw std::out_of_range("get_current(): called in invalid state");
     return current_node->data;
+}
+
+template <typename T>
+void LinkedList<T>::ListEnumerator::set_current(const T &value) {
+    current_node->data = value;
 }
 
 template <typename T>

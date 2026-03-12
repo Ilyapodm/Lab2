@@ -32,6 +32,8 @@ public:
     void insert_at(const T &item, int index);
     T remove_at(int index);
 
+    void filter(bool (*predicate)(const T&));  // "where" in list_sequence doesn't have the needed access (for not being O(n^2))
+
     LinkedList<T>* concat(const LinkedList<T> *other) const; 
 
     // caller owns, must delete
@@ -46,11 +48,13 @@ public:
                 
         const T& get_current() const override;  // get current item
 
+        void set_current(const T &value) override;  // set current item
+
         void reset() override;  // move to the beginning
 
     private:
         int index;
-        const Node *current_node;
+        Node *current_node;  // we can change Node, but linked list will stay unchanged (length, tail, head will be the same)
         const LinkedList<T> *linked_list;
     };
 
