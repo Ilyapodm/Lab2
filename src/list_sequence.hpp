@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sequence.hpp"
+#include "ienumerator.hpp"
 #include "linked_list.hpp"
 
 template <typename T>
@@ -11,8 +12,6 @@ public:
     ListSequence (const LinkedList<T> &list);
     ListSequence(const ListSequence<T> &other); 
     ~ListSequence() { delete list; }
-
-    //TODO реализовать оператор присваивания
     
     virtual ListSequence<T>* instance() = 0;  // returns who will be changed (copy or actually the object) 
 
@@ -46,8 +45,6 @@ protected:
     LinkedList<T> *list;
 }; 
 
-
-
 template <typename T>
 class MutableListSequence : public ListSequence<T> {
 public:
@@ -55,6 +52,11 @@ public:
     MutableListSequence(T *items, int size) : ListSequence<T>(items, size) {}
     MutableListSequence(const LinkedList<T> &list) : ListSequence<T>(list) {}
     MutableListSequence(const ListSequence<T> &other) : ListSequence<T>(other) {}
+    MutableListSequence& operator=(const MutableListSequence &other) {
+        if (this == &other) return *this;
+        *this->list = *other.list; // LinkedList::operator=
+        return *this;
+    }
 protected:
     ListSequence<T>* instance() override {
         return this;  // return actually the object
@@ -72,6 +74,11 @@ public:
     ImmutableListSequence(T *items, int size) : ListSequence<T>(items, size) {}
     ImmutableListSequence(const LinkedList<T> &list) : ListSequence<T>(list) {}
     ImmutableListSequence(const ListSequence<T> &other) : ListSequence<T>(other) {}
+    ImmutableListSequence& operator=(const ImmutableListSequence &other) {
+        if (this == &other) return *this;
+        *this->list = *other.list; // LinkedList::operator=
+        return *this;
+    }
 protected:
     ListSequence<T>* instance() override {
         return new ImmutableListSequence<T>(*this);  // return the copy

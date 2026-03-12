@@ -1,5 +1,20 @@
 # 2 Lab O_o
 
+# Как запустить
+## Из корня проекта:
+cmake -B build                  # конфигурация (один раз / после изменений CMake)
+cmake --build build             # сборка
+
+## Запустить все тесты:
+cd build && ctest --output-on-failure
+
+## Запустить только исполняемую программу:
+./build/src/lab2
+
+## Запустить тесты напрямую с фильтрацией:
+./build/tests/my_tests --gtest_filter="DynamicArray*"
+
+
 # Methods details
 
 ## get_subsequence()

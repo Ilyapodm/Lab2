@@ -5,6 +5,7 @@
 #include "linked_list.hpp"
 #include <stdexcept>
 
+
 template <typename T>
 ListSequence<T>::ListSequence() {
     list = new LinkedList<T>();

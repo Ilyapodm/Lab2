@@ -12,7 +12,8 @@ public:
     ArraySequence(const ArraySequence<T> &other);
     ~ArraySequence() { delete array; }
 
-    Sequence<T>* operator=(const ArraySequence<T> &other);  //TODO реализовать
+    // do not write Sequence<T>* operator=(const ArraySequence<T> &other); because for Mutable 
+    // and immutable there will be different args - "перегрузка", not redefinition.
 
     virtual ArraySequence<T>* instance() = 0;  // returns who will be changed (copy or actually the object)
 
@@ -69,6 +70,11 @@ public:
     MutableArraySequence(T *items, int size) : ArraySequence<T>(items, size) {}
     MutableArraySequence(const DynamicArray<T> &array) : ArraySequence<T>(array) {}
     MutableArraySequence(const ArraySequence<T> &other) : ArraySequence<T>(other) {}
+    MutableArraySequence& operator=(const MutableArraySequence &other) {
+        if (this == &other) return *this;
+        *this->array = *other.array; // DynamicArray::operator=
+        return *this;
+    }
 protected:
     ArraySequence<T>* instance() override {
         return this;  // return actually the object
@@ -86,6 +92,11 @@ public:
     ImmutableArraySequence(T *items, int size) : ArraySequence<T>(items, size) {}
     ImmutableArraySequence(const DynamicArray<T> &array) : ArraySequence<T>(array) {}
     ImmutableArraySequence(const ArraySequence<T> &other) : ArraySequence<T>(other) {}
+    ImmutableArraySequence& operator=(const ImmutableArraySequence &other) {
+        if (this == &other) return *this;
+        *this->array = *other.array; // DynamicArray::operator=
+        return *this;
+    }
 protected:
     ArraySequence<T>* instance() override {
         return new ImmutableArraySequence<T>(*this);  // return the copy

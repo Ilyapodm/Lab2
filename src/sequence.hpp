@@ -1,10 +1,10 @@
 #pragma once
 
 #include "option.hpp"
-#include "ienumerator.hpp"
+#include "ienumerable.hpp"
 
 template <typename T>
-class Sequence {
+class Sequence : public IEnumerable<T> {
 public:
     virtual const T& get_first() const = 0;  // pure virtual method (have to be realized in child-classes)
     virtual const T& get_last() const = 0;
@@ -26,8 +26,6 @@ public:
     virtual Sequence<T>* Map(T (*mapper)(const T& element)) = 0;
     virtual Sequence<T>* Where(bool (*predicate)(const T& element)) = 0;
     virtual T Reduce(T (*reduce_func)(const T& first_element, const T& second_element), const T& start_element) = 0;
-
-    virtual IEnumerator<T>* get_enumerator() const = 0;
 
     virtual ~Sequence() {}
 };
