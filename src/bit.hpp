@@ -6,6 +6,17 @@ public:
     Bit(bool value) : value{value} {}
     Bit(int value) : value{value != 0} {}
 
+    Bit(const Bit &other) {
+        this->value = other.value;
+    }
+
+    Bit& operator=(const Bit &other) {
+        if (this == &other) 
+            return *this;
+        this->value = other.value;
+        return *this;
+    }
+
     bool get() const {
         return value;
     }

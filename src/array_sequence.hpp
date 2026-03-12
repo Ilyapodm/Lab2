@@ -8,7 +8,7 @@ class ArraySequence : public Sequence<T> {
 public:
     ArraySequence();
     ArraySequence(T *items, int size);  // copy from given array
-    ArraySequence (const DynamicArray<T> &array);
+    ArraySequence(const DynamicArray<T> &array);
     ArraySequence(const ArraySequence<T> &other);
     ~ArraySequence() { delete array; }
 
