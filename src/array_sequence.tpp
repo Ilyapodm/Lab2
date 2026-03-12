@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ienumerator.hpp"
 #include "sequence.hpp"
 #include "array_sequence.hpp"
 #include "dynamic_array.hpp"
@@ -156,22 +157,43 @@ Sequence<T>* ArraySequence<T>::concat(Sequence<T> *other) const {
  * Map, Where, Reduce
  *******************************************************************/
 
-//TODO Нужно сначала сделать итератор, для обхода последовательности
-// template <typename T>
-// Sequence<T>* ArraySequence<T>::Map(T (*mapper)(const T &element)) {
+template <typename T>
+Sequence<T>* ArraySequence<T>::Map(T (*mapper)(const T &element)) {
+    ArraySequence<T> *inst = this->instance();
 
-// }
+    for (int i = 0; i < inst->get_size(); i++) {
+        inst->array->set(i, mapper(inst->array->get(i)));
+    }
 
-// template <typename T>
-// Sequence<T>* ArraySequence<T>::Where(bool (*predicate)(const T &element)) {
+    return inst;
+}
 
-// }
+template <typename T>
+Sequence<T>* ArraySequence<T>::Where(bool (*predicate)(const T &element)) {
+    ArraySequence<T> *inst = this->instance();
 
-// template <typename T>
-// T ArraySequence<T>::Reduce(T (*reduce_func)(const T &first_element, const T &second_element), const T &start_element) {
+    int src = 0, dst = 0;
+    for (; src < inst->get_size(); src++) {
+        if (predicate(inst->get(src))) {
+            inst->array->set(dst, inst->get(src));
+            dst++;
+        }
+    }
+    inst->array->resize(dst);  // size can be changed
 
-// }
+    return inst;
+}
 
+template <typename T>
+T ArraySequence<T>::Reduce(T (*reduce_func)(const T &first_element, const T &second_element), const T &start_element) {
+    T result = start_element;
+
+    for (int i = 0; i < get_size(); i++) {
+        result = reduce_func(get(i), result);  // usually start_element is the 1 arg
+    }
+
+    return result;
+}
 
 /*******************************************************************
  * Enumerator

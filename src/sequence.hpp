@@ -3,8 +3,6 @@
 #include "option.hpp"
 #include "ienumerator.hpp"
 
-//TODO реализовать map, where, reduce
-
 template <typename T>
 class Sequence {
 public:

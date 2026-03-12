@@ -151,7 +151,6 @@ Sequence<T>* ListSequence<T>::concat(Sequence<T> *other) const {
  * Map, Where, Reduce
  *******************************************************************/
 
-//TODO Нужно сначала сделать итератор, для обхода последовательности
 // template <typename T>
 // Sequence<T>* ListSequence<T>::Map(T (*mapper)(const T &element)) {
 

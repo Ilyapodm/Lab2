@@ -12,7 +12,7 @@ public:
     ArraySequence(const ArraySequence<T> &other);
     ~ArraySequence() { delete array; }
 
-    //TODO реализовать оператор присваивания
+    Sequence<T>* operator=(const ArraySequence<T> &other);  //TODO реализовать
 
     virtual ArraySequence<T>* instance() = 0;  // returns who will be changed (copy or actually the object)
 
