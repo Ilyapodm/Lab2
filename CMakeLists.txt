@@ -1,12 +1,21 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.15)
 # 3.14+ обязателен для FetchContent_MakeAvailable
 
 project(Lab2 CXX)
 # Lab2 — имя проекта, используется в IDE и в сообщениях CMake
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Если у тебя нет C++17 фич — можно поставить 14, но 17 рекомендуется
+
+if(MSVC OR CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+    set(CMAKE_MSVC_RUNTIME_LIBRARY
+        "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
+        CACHE STRING "" FORCE
+    )
+endif()
 
 # ─── Подключаем папки с кодом ────────────────────────────────────────────────
 # ПОРЯДОК ВАЖЕН: src должен быть раньше tests,

@@ -106,3 +106,5 @@ protected:
         return new ImmutableArraySequence<T>();
     }
 };
+
+#include "array_sequence.tpp"

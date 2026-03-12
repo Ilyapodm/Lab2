@@ -88,3 +88,5 @@ protected:
         return new ImmutableListSequence<T>();
     }
 };
+
+#include "list_sequence.tpp"

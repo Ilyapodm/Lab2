@@ -1,4 +1,4 @@
-# ─── Исполняемый файл с тестами ───────────────────────────────────────────────
+# Executale file with tests
 add_executable(tests
     test_sequence.cpp
     test_array_sequence.cpp
@@ -6,15 +6,11 @@ add_executable(tests
     test_bit_sequence.cpp
     test_dynamic_array.cpp
     test_linked_list.cpp
-    # Добавляй новые файлы с тестами сюда:
-    # test_dynamic_array.cpp
-    # test_linked_list.cpp
-    # Можно разбить тесты по одному файлу на каждый класс — это удобно
 )
 
 target_link_libraries(tests
     PRIVATE
-    seq_lib           # твои классы — те же самые, что использует main_app
+    seq_lib         
     GTest::gtest_main # GTest + готовый main(), который запускает все тесты
     # Если хочешь писать main() сам — замени на GTest::gtest (без _main)
 )

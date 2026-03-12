@@ -1,9 +1,4 @@
-#pragma once
-
 #include "ienumerator.hpp"
-#include "sequence.hpp"
-#include "array_sequence.hpp"
-#include "dynamic_array.hpp"
 #include <stdexcept>
 
 template <typename T>

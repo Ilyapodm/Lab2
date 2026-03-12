@@ -1,6 +1,3 @@
-#pragma once
-
-#include "dynamic_array.hpp"
 #include <stdexcept>
 
 template <typename T> 

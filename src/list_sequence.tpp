@@ -1,10 +1,4 @@
-#pragma once
-
-#include "ienumerator.hpp"
-#include "list_sequence.hpp"
-#include "linked_list.hpp"
 #include <stdexcept>
-
 
 template <typename T>
 ListSequence<T>::ListSequence() {
