@@ -26,9 +26,12 @@ public:
 
     LinkedList<T>* get_sublist(int start_index, int end_index) const;
     
+    void set(int index, const T &item);
     void append(const T &item); 
     void prepend(const T &item);
     void insert_at(const T &item, int index);
+    T remove_at(int index);
+
     LinkedList<T>* concat(const LinkedList<T> *other) const; 
 
     // caller owns, must delete

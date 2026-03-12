@@ -153,7 +153,11 @@ Sequence<T>* ListSequence<T>::concat(Sequence<T> *other) const {
 
 // template <typename T>
 // Sequence<T>* ListSequence<T>::Map(T (*mapper)(const T &element)) {
+//     ListSequence<T> *inst = instance();
 
+//     for (int i = 0; i < inst->get_size(); i++) {
+//         inst->list->
+//     }
 // }
 
 // template <typename T>

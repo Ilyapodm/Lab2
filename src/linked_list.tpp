@@ -179,6 +179,20 @@ LinkedList<T>* LinkedList<T>::get_sublist(int start_index, int end_index) const 
 }
 
 template <typename T>
+void LinkedList<T>::set(int index, const T& item) {
+    if (index >= this->length || index < 0) {
+        throw std::out_of_range("set: Index out of range");
+    }
+    
+    Node *current_node = head;
+    for (int i = 0; i < index; i++) {
+        current_node = current_node->next;
+    }
+
+    current_node->data = item;
+}
+
+template <typename T>
 void LinkedList<T>::append(const T& item) {
     
     Node *new_node = new Node{.data = item, .next = nullptr};
@@ -240,6 +254,40 @@ void LinkedList<T>::insert_at(const T& item, int index) {
     new_node->next = next_node;
 
     length++;
+}
+
+template <typename T>
+T LinkedList<T>::remove_at(int index) {
+    if (index < 0 || index >= get_length())
+        throw std::out_of_range("remove_at: Index out of range");
+
+    T value;
+    Node *node_to_delete;
+
+    if (index == 0) {
+        node_to_delete = head;
+        value = head->data;
+        head = head->next;
+        if (head == nullptr)
+            tail = nullptr;
+    }
+    else {
+        Node *previous_node = head;
+        // index - 1 because we iterate not by current, but by previous
+        for (int i = 0; i < index - 1; i++) {
+            previous_node = previous_node->next;
+        }
+
+        node_to_delete = previous_node->next;
+        value = node_to_delete->data;
+        previous_node->next = node_to_delete->next;  // changes the links
+        if (node_to_delete->next == nullptr) 
+            tail = previous_node;
+    }    
+
+    length--;
+    delete node_to_delete;
+    return value;
 }
 
 template <typename T>
