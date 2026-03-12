@@ -1,3 +1,6 @@
+#pragma once
+
+#include "list_sequence.hpp"
 #include <stdexcept>
 
 template <typename T>

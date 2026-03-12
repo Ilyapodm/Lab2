@@ -27,6 +27,8 @@ public:
     virtual Sequence<T>* Where(bool (*predicate)(const T& element)) = 0;
     virtual T Reduce(T (*reduce_func)(const T& first_element, const T& second_element), const T& start_element) = 0;
 
+    const T& operator[](int index) const { return this->get(index); }
+
     virtual ~Sequence() {}
 };
 

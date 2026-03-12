@@ -1,3 +1,6 @@
+#pragma once
+
+#include "array_sequence.hpp"
 #include "ienumerator.hpp"
 #include <stdexcept>
 
