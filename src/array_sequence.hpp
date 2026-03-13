@@ -37,6 +37,7 @@ public:
     Sequence<T>* map(T (*mapper)(const T &element)) override;
     Sequence<T>* where(bool (*predicate)(const T &element)) override;
     T reduce(T (*reduce_func)(const T &first_element, const T &second_element), const T &start_element) override;
+    Sequence<T>* slice(int i, int count, const Sequence<T> &seq) override;
 
     // nested class for enumerator
     class ArrayEnumerator : public IEnumerator<T> {

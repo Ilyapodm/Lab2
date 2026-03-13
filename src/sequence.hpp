@@ -26,6 +26,7 @@ public:
     virtual Sequence<T>* map(T (*mapper)(const T& element)) = 0;
     virtual Sequence<T>* where(bool (*predicate)(const T& element)) = 0;
     virtual T reduce(T (*reduce_func)(const T& first_element, const T& second_element), const T& start_element) = 0;
+    virtual Sequence<T>* slice(int index, int count, const Sequence<T> &seq) = 0;
 
     // for reading only, because else "instance" approach is useless or need workarounds
     const T& operator[](int index) const { return this->get(index); } 

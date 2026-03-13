@@ -192,3 +192,24 @@ T ListSequence<T>::reduce(T (*reduce_func)(const T &first_element, const T &seco
 
     return result;
 }
+
+template <typename T>
+Sequence<T>* ListSequence<T>::slice(int index, int count, const Sequence<T> &seq) {
+    // if "count" go out of the edge, silently but it till this edge
+    if (index < 0)
+        index = get_size() + index;
+    if (index < 0 || index >= get_size()) 
+        throw std::out_of_range("slice: Index out of range");
+        
+    //         left part    deleted        right part
+    // this: [0 .. index) [index .. end) [end .. get_size())
+
+    //       left part        inserted          right part
+    // inst: [0 .. index) [ seq.get_size() ] [end .. get_size())
+    int end = get_size() < index + count ? get_size() : index + count;  // the next element after replaced elements
+
+    Sequence<T> *inst = this->instance();
+
+    int new_size = get_size() + seq->get_size() + (get_size() - end);
+
+}

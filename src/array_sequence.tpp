@@ -1,7 +1,9 @@
 #pragma once
 
 #include "array_sequence.hpp"
+#include "dynamic_array.hpp"
 #include "ienumerator.hpp"
+#include "sequence.hpp"
 #include <stdexcept>
 
 template <typename T>
@@ -191,6 +193,55 @@ T ArraySequence<T>::reduce(T (*reduce_func)(const T &first_element, const T &sec
     }
 
     return result;
+}
+
+template <typename T>
+Sequence<T>* ArraySequence<T>::slice(int index, int count, const Sequence<T> &seq) {
+    // if "count" go out of the edge, silently but it till this edge
+    if (index < 0)
+        index = get_size() + index;
+    if (index < 0 || index >= get_size()) 
+        throw std::out_of_range("slice: Index out of range");
+        
+    //         left part    deleted        right part
+    // this: [0 .. index) [index .. end) [end .. get_size())
+
+    //       left part        inserted          right part
+    // inst: [0 .. index) [ seq.get_size() ] [end .. get_size())
+    int end = get_size() < index + count ? get_size() : index + count;  // the next element after replaced elements
+
+    Sequence<T> *inst = this->instance();
+
+    int new_size = get_size() + seq->get_size() + (get_size() - end);
+
+    DynamicArray<T> *new_array = new DynamicArray<T>(new_size);
+
+    try {
+        int dst = 0;
+        for (int i = 0; i < index; i++) {
+            new_array->set(dst, get(i));  // copy left side
+            dst++;
+        }
+
+        for (int i = 0; i < seq.get_size(); i++) {
+            new_array->set(dst, seq.get(i));  // copy from seq
+            dst++;
+        }
+
+        for (int i = end; i < get_size(); i++) {
+            new_array->set(dst, get(i));
+            dst++;
+        }
+    } catch (...) {
+        delete new_array;
+        if (inst != this)
+            delete inst;
+        throw;
+    }
+
+    delete inst->array;
+    inst->array = new_array;
+    return inst;
 }
 
 /*******************************************************************
