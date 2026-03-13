@@ -34,9 +34,9 @@ public:
     Sequence<T>* insert_at(const T &item, int index) override;
     Sequence <T>* concat(Sequence<T> *other) const override;
 
-    Sequence<T>* Map(T (*mapper)(const T &element)) override;
-    Sequence<T>* Where(bool (*predicate)(const T &element)) override;
-    T Reduce(T (*reduce_func)(const T &first_element, const T &second_element), const T &start_element) override;
+    Sequence<T>* map(T (*mapper)(const T &element)) override;
+    Sequence<T>* where(bool (*predicate)(const T &element)) override;
+    T reduce(T (*reduce_func)(const T &first_element, const T &second_element), const T &start_element) override;
 
     // nested class for enumerator
     class ArrayEnumerator : public IEnumerator<T> {

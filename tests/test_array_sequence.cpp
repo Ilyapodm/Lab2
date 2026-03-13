@@ -25,19 +25,19 @@ TEST(MutableArraySequence, InsertAt_ReturnsSelf) {
     EXPECT_EQ(s.get(1), 2);
 }
 
-TEST(MutableArraySequence, Map_MutatesInPlace) {
+TEST(MutableArraySequence, map_MutatesInPlace) {
     int d[] = {1, 2, 3};
     MutableArraySequence<int> s(d, 3);
-    Sequence<int>* ret = s.Map([](const int& x) { return x * 10; });
+    Sequence<int>* ret = s.map([](const int& x) { return x * 10; });
     EXPECT_EQ(ret, &s);
     EXPECT_EQ(s.get(0), 10);
     EXPECT_EQ(s.get(2), 30);
 }
 
-TEST(MutableArraySequence, Where_MutatesInPlace) {
+TEST(MutableArraySequence, where_MutatesInPlace) {
     int d[] = {1, 2, 3, 4, 5};
     MutableArraySequence<int> s(d, 5);
-    Sequence<int>* ret = s.Where([](const int& x) { return x > 3; });
+    Sequence<int>* ret = s.where([](const int& x) { return x > 3; });
     EXPECT_EQ(ret, &s);
     EXPECT_EQ(s.get_size(), 2);
     EXPECT_EQ(s.get(0), 4);
@@ -68,19 +68,19 @@ TEST(ImmutableArraySequence, Prepend_OriginalUnchanged) {
     delete ret;
 }
 
-TEST(ImmutableArraySequence, Map_OriginalUnchanged) {
+TEST(ImmutableArraySequence, map_OriginalUnchanged) {
     int d[] = {1, 2, 3};
     ImmutableArraySequence<int> s(d, 3);
-    Sequence<int>* ret = s.Map([](const int& x) { return x * 2; });
+    Sequence<int>* ret = s.map([](const int& x) { return x * 2; });
     EXPECT_EQ(s.get(0), 1);      // original doesn't change
     EXPECT_EQ(ret->get(0), 2);
     delete ret;
 }
 
-TEST(ImmutableArraySequence, Where_OriginalUnchanged) {
+TEST(ImmutableArraySequence, where_OriginalUnchanged) {
     int d[] = {1, 2, 3, 4};
     ImmutableArraySequence<int> s(d, 4);
-    Sequence<int>* ret = s.Where([](const int& x) { return x % 2 == 0; });
+    Sequence<int>* ret = s.where([](const int& x) { return x % 2 == 0; });
     EXPECT_EQ(s.get_size(), 4);
     EXPECT_EQ(ret->get_size(), 2);
     delete ret;

@@ -23,9 +23,9 @@ public:
     virtual Sequence<T>* insert_at(const T& item, int index) = 0;
     virtual Sequence<T>* concat(Sequence<T> *list) const = 0;
 
-    virtual Sequence<T>* Map(T (*mapper)(const T& element)) = 0;
-    virtual Sequence<T>* Where(bool (*predicate)(const T& element)) = 0;
-    virtual T Reduce(T (*reduce_func)(const T& first_element, const T& second_element), const T& start_element) = 0;
+    virtual Sequence<T>* map(T (*mapper)(const T& element)) = 0;
+    virtual Sequence<T>* where(bool (*predicate)(const T& element)) = 0;
+    virtual T reduce(T (*reduce_func)(const T& first_element, const T& second_element), const T& start_element) = 0;
 
     // for reading only, because else "instance" approach is useless or need workarounds
     const T& operator[](int index) const { return this->get(index); } 
@@ -33,4 +33,4 @@ public:
     virtual ~Sequence() {}
 };
 
-#include "sequence.tpp"
+#include "sequence.tpp" 

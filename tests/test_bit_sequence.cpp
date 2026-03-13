@@ -251,27 +251,27 @@ TEST(BitSequence_DeMorgan, NotAnd_EqualsOrNot) {
 // Унаследованный интерфейс Sequence<Bit>
 // ─────────────────────────────────────────────
 
-TEST(BitSequence_Sequence, Map_InvertsViaNot) {
+TEST(BitSequence_Sequence, map_InvertsViaNot) {
     auto* s = make_mutable({true, false, true});
-    Sequence<Bit>* result = s->Map([](const Bit& b) { return ~b; });
+    Sequence<Bit>* result = s->map([](const Bit& b) { return ~b; });
     EXPECT_EQ(result->get(0).get(), false);
     EXPECT_EQ(result->get(1).get(), true);
     EXPECT_EQ(result->get(2).get(), false);
     delete s;
 }
 
-TEST(BitSequence_Sequence, Where_KeepsOnlyTrue) {
+TEST(BitSequence_Sequence, where_KeepsOnlyTrue) {
     auto* s = make_mutable({true, false, true, false, true});
-    Sequence<Bit>* result = s->Where([](const Bit& b) { return b.get(); });
+    Sequence<Bit>* result = s->where([](const Bit& b) { return b.get(); });
     EXPECT_EQ(result->get_size(), 3);
     for (int i = 0; i < result->get_size(); i++)
         EXPECT_EQ(result->get(i).get(), true);
     delete s;
 }
 
-TEST(BitSequence_Sequence, Reduce_CountTrueBits) {
+TEST(BitSequence_Sequence, reduce_CountTrueBits) {
     auto* s = make_mutable({true, false, true, true, false});
-    int count = s->Reduce(
+    int count = s->reduce(
         [](const Bit& a, const Bit& acc) {
             // acc здесь Bit, но нам нужен int — используем хак через Bit(int)
             return Bit(a.get() ? 1 : 0);
@@ -283,10 +283,10 @@ TEST(BitSequence_Sequence, Reduce_CountTrueBits) {
     delete s;
 }
 
-// Подсчёт через Where + get_size — более корректный способ:
-TEST(BitSequence_Sequence, CountTrueBits_ViaWhere) {
+// Подсчёт через where + get_size — более корректный способ:
+TEST(BitSequence_Sequence, CountTrueBits_Viawhere) {
     auto* s = make_mutable({true, false, true, true, false});
-    Sequence<Bit>* trues = s->Where([](const Bit& b) { return b.get(); });
+    Sequence<Bit>* trues = s->where([](const Bit& b) { return b.get(); });
     EXPECT_EQ(trues->get_size(), 3);
     delete s;
 }

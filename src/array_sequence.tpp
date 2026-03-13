@@ -152,11 +152,11 @@ Sequence<T>* ArraySequence<T>::concat(Sequence<T> *other) const {
 }
 
 /*******************************************************************
- * Map, Where, Reduce
+ * map, where, reduce
  *******************************************************************/
 
 template <typename T>
-Sequence<T>* ArraySequence<T>::Map(T (*mapper)(const T &element)) {
+Sequence<T>* ArraySequence<T>::map(T (*mapper)(const T &element)) {
     ArraySequence<T> *inst = this->instance();
 
     for (int i = 0; i < inst->get_size(); i++) {
@@ -167,7 +167,7 @@ Sequence<T>* ArraySequence<T>::Map(T (*mapper)(const T &element)) {
 }
 
 template <typename T>
-Sequence<T>* ArraySequence<T>::Where(bool (*predicate)(const T &element)) {
+Sequence<T>* ArraySequence<T>::where(bool (*predicate)(const T &element)) {
     ArraySequence<T> *inst = this->instance();
 
     int src = 0, dst = 0;
@@ -183,7 +183,7 @@ Sequence<T>* ArraySequence<T>::Where(bool (*predicate)(const T &element)) {
 }
 
 template <typename T>
-T ArraySequence<T>::Reduce(T (*reduce_func)(const T &first_element, const T &second_element), const T &start_element) {
+T ArraySequence<T>::reduce(T (*reduce_func)(const T &first_element, const T &second_element), const T &start_element) {
     T result = start_element;
 
     for (int i = 0; i < get_size(); i++) {

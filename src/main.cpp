@@ -55,38 +55,38 @@ static void print_bit_seq(const Sequence<Bit>* s, const std::string& label = "Bi
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  ШАГ 3: Функторы для Map / Where / Reduce
+//  ШАГ 3: Функторы для map / where / reduce
 //  Используем обычные указатели на функции — лямбды здесь не подходят,
-//  т.к. Sequence::Map принимает T(*)(const T&), а не std::function
+//  т.к. Sequence::map принимает T(*)(const T&), а не std::function
 // ═══════════════════════════════════════════════════════════════════════════
 
-// int Map
+// int map
 static int fn_x2(const int& x)  { return x * 2; }
 static int fn_sq(const int& x)  { return x * x; }
 static int fn_neg(const int& x) { return -x; }
 static int fn_inc(const int& x) { return x + 1; }
 
-// int Where
+// int where
 static bool fn_pos(const int& x)  { return x > 0; }
 static bool fn_neg2(const int& x) { return x < 0; }
 static bool fn_even(const int& x) { return x % 2 == 0; }
 static bool fn_odd(const int& x)  { return x % 2 != 0; }
 
-// int Reduce
+// int reduce
 static int fn_sum(const int& a, const int& b)  { return a + b; }
 static int fn_prod(const int& a, const int& b) { return a * b; }
 static int fn_max(const int& a, const int& b)  { return a > b ? a : b; }
 static int fn_min(const int& a, const int& b)  { return a < b ? a : b; }
 
-// Bit Map
+// Bit map
 static Bit fn_bnot(const Bit& b) { return ~b; }
 static Bit fn_bid(const Bit& b)  { return b; }
 
-// Bit Where
+// Bit where
 static bool fn_is1(const Bit& b) { return  b.get(); }
 static bool fn_is0(const Bit& b) { return !b.get(); }
 
-// Bit Reduce
+// Bit reduce
 static Bit fn_band(const Bit& a, const Bit& b) { return a & b; }
 static Bit fn_bor(const Bit& a, const Bit& b)  { return a | b; }
 static Bit fn_bxor(const Bit& a, const Bit& b) { return a ^ b; }
@@ -94,7 +94,7 @@ static Bit fn_bxor(const Bit& a, const Bit& b) { return a ^ b; }
 // ─── Меню выбора функторов ───────────────────────────────────────────────
 
 static int (*pick_map_int())(const int&) {
-    std::cout << "  Функция Map:\n"
+    std::cout << "  Функция map:\n"
               << "    1. x*2   2. x*x   3. -x   4. x+1\n";
     switch (ask_range("  Выбор: ", 1, 4)) {
         case 1: return fn_x2;
@@ -105,7 +105,7 @@ static int (*pick_map_int())(const int&) {
 }
 
 static bool (*pick_where_int())(const int&) {
-    std::cout << "  Условие Where:\n"
+    std::cout << "  Условие where:\n"
               << "    1. x>0   2. x<0   3. чётное   4. нечётное\n";
     switch (ask_range("  Выбор: ", 1, 4)) {
         case 1: return fn_pos;
@@ -204,9 +204,9 @@ static void run_int(Sequence<int>* seq, bool is_mutable) {
                   << (is_mutable ? "Mutable" : "Immutable") << "] ───────────────\n"
                   << "│  1. append           7. get_subsequence\n"
                   << "│  2. prepend          8. concat\n"
-                  << "│  3. insert_at        9. Map\n"
-                  << "│  4. get(index)      10. Where\n"
-                  << "│  5. get_first/last  11. Reduce\n"
+                  << "│  3. insert_at        9. map\n"
+                  << "│  4. get(index)      10. where\n"
+                  << "│  5. get_first/last  11. reduce\n"
                   << "│  6. get_size        12. Печать\n"
                   << "│  0. ← Назад\n"
                   << "└──────────────────────────────────────────\n";
@@ -274,20 +274,20 @@ static void run_int(Sequence<int>* seq, bool is_mutable) {
                 }
                 case 9: {
                     auto* fn = pick_map_int();
-                    Sequence<int>* res = seq->Map(fn);
+                    Sequence<int>* res = seq->map(fn);
                     if (res != seq) { delete seq; seq = res; }
-                    print_int_seq(seq, "После Map");
+                    print_int_seq(seq, "После map");
                     break;
                 }
                 case 10: {
                     auto* fn = pick_where_int();
-                    Sequence<int>* res = seq->Where(fn);
+                    Sequence<int>* res = seq->where(fn);
                     if (res != seq) { delete seq; seq = res; }
-                    print_int_seq(seq, "После Where");
+                    print_int_seq(seq, "После where");
                     break;
                 }
                 case 11: {
-                    std::cout << "  Операция Reduce:\n"
+                    std::cout << "  Операция reduce:\n"
                               << "    1. Сумма      (нач=0)\n"
                               << "    2. Произведение (нач=1)\n"
                               << "    3. Максимум   (нач=INT_MIN)\n"
@@ -297,7 +297,7 @@ static void run_int(Sequence<int>* seq, bool is_mutable) {
                     int starts[] = {0, 1, INT_MIN, INT_MAX};
                     const char* names[] = {"Сумма", "Произведение", "Максимум", "Минимум"};
                     std::cout << "  " << names[ch-1] << " = "
-                              << seq->Reduce(fns[ch-1], starts[ch-1]) << "\n";
+                              << seq->reduce(fns[ch-1], starts[ch-1]) << "\n";
                     break;
                 }
                 case 12: {
@@ -331,9 +331,9 @@ static void run_bits(BitSequence* seq, bool is_mutable) {
                   << "│  1. append            9. bit_and (& с другой)\n"
                   << "│  2. prepend          10. bit_or  (| с другой)\n"
                   << "│  3. insert_at        11. bit_xor (^ с другой)\n"
-                  << "│  4. get(index)       12. Map\n"
-                  << "│  5. get_first/last   13. Where\n"
-                  << "│  6. get_size         14. Reduce\n"
+                  << "│  4. get(index)       12. map\n"
+                  << "│  5. get_first/last   13. where\n"
+                  << "│  6. get_size         14. reduce\n"
                   << "│  7. get_subsequence  15. concat\n"
                   << "│  8. bit_not (~)      16. Печать\n"
                   << "│  0. ← Назад\n"
@@ -416,27 +416,27 @@ static void run_bits(BitSequence* seq, bool is_mutable) {
                     break;
                 }
                 case 12: {
-                    std::cout << "  Функция Map:\n"
+                    std::cout << "  Функция map:\n"
                               << "    1. NOT (инверсия)   2. Идентичность\n";
                     Bit (*fn)(const Bit&) = (ask_range("  Выбор: ", 1, 2) == 1)
                                            ? fn_bnot : fn_bid;
-                    Sequence<Bit>* res = seq->Map(fn);
+                    Sequence<Bit>* res = seq->map(fn);
                     if (res != seq) { delete seq; seq = static_cast<BitSequence*>(res); }
-                    print_bit_seq(seq, "После Map");
+                    print_bit_seq(seq, "После map");
                     break;
                 }
                 case 13: {
-                    std::cout << "  Условие Where:\n"
+                    std::cout << "  Условие where:\n"
                               << "    1. Оставить 1-биты   2. Оставить 0-биты\n";
                     bool (*fn)(const Bit&) = (ask_range("  Выбор: ", 1, 2) == 1)
                                             ? fn_is1 : fn_is0;
-                    Sequence<Bit>* res = seq->Where(fn);
+                    Sequence<Bit>* res = seq->where(fn);
                     if (res != seq) { delete seq; seq = static_cast<BitSequence*>(res); }
-                    print_bit_seq(seq, "После Where");
+                    print_bit_seq(seq, "После where");
                     break;
                 }
                 case 14: {
-                    std::cout << "  Операция Reduce:\n"
+                    std::cout << "  Операция reduce:\n"
                               << "    1. AND-all (нач=1): все ли биты = 1?\n"
                               << "    2. OR-all  (нач=0): есть ли хоть одна 1?\n"
                               << "    3. XOR-all (нач=0): чётность числа единиц\n";
@@ -444,7 +444,7 @@ static void run_bits(BitSequence* seq, bool is_mutable) {
                     Bit (*fns[])(const Bit&, const Bit&) = {fn_band, fn_bor, fn_bxor};
                     Bit starts[] = {Bit(true), Bit(false), Bit(false)};
                     const char* names[] = {"AND-all", "OR-all", "XOR-all"};
-                    Bit result = seq->Reduce(fns[ch-1], starts[ch-1]);
+                    Bit result = seq->reduce(fns[ch-1], starts[ch-1]);
                     std::cout << "  " << names[ch-1] << " = " << (result.get() ? 1 : 0) << "\n";
                     break;
                 }

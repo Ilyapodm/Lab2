@@ -90,31 +90,31 @@ TEST_P(SequenceInterfaceTest, TryGet_AfterAppend_ReturnsSome) {
 }
 
 /*******************************************************************
- * Map / Where / Reduce
+ * map / where / reduce
  *******************************************************************/
 
-TEST_P(SequenceInterfaceTest, Map_DoublesValues) {
+TEST_P(SequenceInterfaceTest, map_DoublesValues) {
     Sequence<int>* s = GetParam();
     for (int v : {1, 2, 3}) {
         Sequence<int>* next = s->append(v);
         if (next != s && s != GetParam()) delete s;
         s = next;
     }
-    Sequence<int>* mapped = s->Map([](const int& x) { return x * 2; });
+    Sequence<int>* mapped = s->map([](const int& x) { return x * 2; });
     EXPECT_EQ(mapped->get(0), 2);
     EXPECT_EQ(mapped->get(2), 6);
     if (mapped != s)    delete mapped;
     if (s != GetParam()) delete s;
 }
 
-TEST_P(SequenceInterfaceTest, Where_FiltersElements) {
+TEST_P(SequenceInterfaceTest, where_FiltersElements) {
     Sequence<int>* s = GetParam();
     for (int v : {1, 2, 3, 4}) {
         Sequence<int>* next = s->append(v);
         if (next != s && s != GetParam()) delete s;
         s = next;
     }
-    Sequence<int>* filtered = s->Where([](const int& x) { return x % 2 == 0; });
+    Sequence<int>* filtered = s->where([](const int& x) { return x % 2 == 0; });
     EXPECT_EQ(filtered->get_size(), 2);
     EXPECT_EQ(filtered->get(0), 2);
     EXPECT_EQ(filtered->get(1), 4);
@@ -122,14 +122,14 @@ TEST_P(SequenceInterfaceTest, Where_FiltersElements) {
     if (s != GetParam()) delete s;
 }
 
-TEST_P(SequenceInterfaceTest, Reduce_Sum) {
+TEST_P(SequenceInterfaceTest, reduce_Sum) {
     Sequence<int>* s = GetParam();
     for (int v : {1, 2, 3, 4, 5}) {
         Sequence<int>* next = s->append(v);
         if (next != s && s != GetParam()) delete s;
         s = next;
     }
-    int sum = s->Reduce([](const int& a, const int& b) { return a + b; }, 0);
+    int sum = s->reduce([](const int& a, const int& b) { return a + b; }, 0);
     EXPECT_EQ(sum, 15);
     if (s != GetParam()) delete s;
 }

@@ -19,7 +19,7 @@ struct Pair {
     }
 };
 
-template <typename T1, typename T2>
+template <typename T1, typename T2> 
 std::ostream& operator<<(std::ostream& os, const Pair<T1, T2> &pair) {
     os << "(" << pair.first << ", " << pair.second << ")";
     return os;
@@ -58,4 +58,33 @@ unzip(const Sequence<Pair<T1, T2>> &seq) {
     }
 
     return {res1, res2};
+}
+
+template <typename T>
+MutableArraySequence< MutableArraySequence<T>* >* split(const Sequence<T> &seq, const T &split_element) {
+    MutableArraySequence< MutableArraySequence<T>* >* result = new MutableArraySequence< MutableArraySequence<T>* >();
+    MutableArraySequence<T> *current = new MutableArraySequence<T>();
+
+    try {
+        for (int i = 0; i < seq.get_size(); i++) {
+            if (seq[i] == split_element) {
+                result->append(current);
+                current = new MutableArraySequence<T>();
+            }
+            else {
+                current->append(seq[i]);
+            }
+        }
+
+        result->append(current);
+        return result;
+    } catch (...) {
+        delete current;
+        for (int i = 0; i < result->get_size(); i++) {
+            delete (*result)[i];
+        }
+        delete result;
+        throw;
+    }
+    
 }

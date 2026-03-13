@@ -1,6 +1,7 @@
 #pragma once
 
 #include "list_sequence.hpp"
+#include "sequence.hpp"
 #include <stdexcept>
 
 template <typename T>
@@ -147,11 +148,11 @@ Sequence<T>* ListSequence<T>::concat(Sequence<T> *other) const {
 }
 
 /*******************************************************************
- * Map, Where, Reduce
+ * map, where, reduce
  *******************************************************************/
 
 template <typename T>
-Sequence<T>* ListSequence<T>::Map(T (*mapper)(const T &element)) {
+Sequence<T>* ListSequence<T>::map(T (*mapper)(const T &element)) {
     ListSequence<T> *inst = this->instance();
 
     IEnumerator<T>* inst_iter = inst->get_enumerator();  // use enumerator not to repeat "get" and "set" loop
@@ -166,7 +167,7 @@ Sequence<T>* ListSequence<T>::Map(T (*mapper)(const T &element)) {
 }
 
 template <typename T>
-Sequence<T>* ListSequence<T>::Where(bool (*predicate)(const T &element)) {
+Sequence<T>* ListSequence<T>::where(bool (*predicate)(const T &element)) {
     // "set_current" doesn't have the needed access to the list:
     // it can't delete nodes, change the structure of the list
     // so "where" delegates it to "filter" in "linked_list", to do it quick 
@@ -178,7 +179,7 @@ Sequence<T>* ListSequence<T>::Where(bool (*predicate)(const T &element)) {
 }
 
 template <typename T>
-T ListSequence<T>::Reduce(T (*reduce_func)(const T &first_element, const T &second_element), const T &start_element) {
+T ListSequence<T>::reduce(T (*reduce_func)(const T &first_element, const T &second_element), const T &start_element) {
     T result = start_element;
 
     IEnumerator<T>* this_iter = get_enumerator();  // use enumerator not to repeat "get" loop
