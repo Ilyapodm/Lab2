@@ -7,7 +7,8 @@
 class BitSequence : public ArraySequence<Bit> {
 public:
     BitSequence() : ArraySequence<Bit>() {}
-    BitSequence(bool *items, int size) : ArraySequence<Bit>(size){
+    BitSequence(bool *items, int size) : ArraySequence<Bit>(){
+        this->array->resize(size);
         for (int i = 0; i < size; i++)
             this->array->set(i, Bit(items[i]));
     }

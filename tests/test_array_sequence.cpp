@@ -58,6 +58,18 @@ TEST(ImmutableArraySequence, Append_ReturnsNewObject) {
     delete ret;
 }
 
+TEST(ImmutableArraySequence, ChainedAppend_EachStepNewObject) {
+    ImmutableArraySequence<int> s;
+    Sequence<int>* s1 = s.append(1);
+    Sequence<int>* s2 = s1->append(2);
+    EXPECT_NE(s1, s2);
+    EXPECT_EQ(s.get_size(),  0);
+    EXPECT_EQ(s1->get_size(), 1);
+    EXPECT_EQ(s2->get_size(), 2);
+    delete s1;
+    delete s2;
+}
+
 TEST(ImmutableArraySequence, Prepend_OriginalUnchanged) {
     int d[] = {2, 3};
     ImmutableArraySequence<int> s(d, 2);
@@ -84,18 +96,6 @@ TEST(ImmutableArraySequence, where_OriginalUnchanged) {
     EXPECT_EQ(s.get_size(), 4);
     EXPECT_EQ(ret->get_size(), 2);
     delete ret;
-}
-
-TEST(ImmutableArraySequence, ChainedAppend_EachStepNewObject) {
-    ImmutableArraySequence<int> s;
-    Sequence<int>* s1 = s.append(1);
-    Sequence<int>* s2 = s1->append(2);
-    EXPECT_NE(s1, s2);
-    EXPECT_EQ(s.get_size(),  0);
-    EXPECT_EQ(s1->get_size(), 1);
-    EXPECT_EQ(s2->get_size(), 2);
-    delete s1;
-    delete s2;
 }
 
 /*******************************************************************

@@ -33,21 +33,28 @@ MutableArraySequence<Pair<T1, T2>>* zip(const Sequence<T1> &first, const Sequenc
     int result_size = (first.get_size() > second.get_size()) ? second.get_size() : first.get_size();  
 
     MutableArraySequence<Pair<T1, T2>> *result = new MutableArraySequence<Pair<T1, T2>>();
-    for (int i = 0; i < result_size; i++) {
-        result->append({first[i], second[i]});
+
+    try {
+        for (int i = 0; i < result_size; i++) {
+            result->append({first[i], second[i]});
+        }
+    } catch (...) {
+        delete result;
+        throw;
     }
+    
     return result;
 }
 
 // unzip returns a "Pair" of MutableArraySequences. Doens't matter what they were before
 template <typename T1, typename T2>
-Pair<MutableArraySequence<T1>, MutableArraySequence<T2>>
+Pair<MutableArraySequence<T1>*, MutableArraySequence<T2>* >
 unzip(const Sequence<Pair<T1, T2>> &seq) {
     MutableArraySequence<T1> *res1 = new MutableArraySequence<T1>();
     MutableArraySequence<T2> *res2 = new MutableArraySequence<T2>();
 
     try {
-        for (int i = 0; i < seq->get_size(); i++) {
+        for (int i = 0; i < seq.get_size(); i++) {
         res1->append(seq[i].first);
         res2->append(seq[i].second);
         }

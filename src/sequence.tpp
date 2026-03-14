@@ -46,5 +46,8 @@ std::ostream& operator<<(std::ostream& os, const Sequence<T>& seq) {
         i++;
     }
     os << "]";
+
+    delete seq_iter;
+
     return os;
 }

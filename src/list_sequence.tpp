@@ -1,5 +1,6 @@
 #pragma once
 
+#include "linked_list.hpp"
 #include "list_sequence.hpp"
 #include "sequence.hpp"
 #include <stdexcept>
@@ -155,13 +156,7 @@ template <typename T>
 Sequence<T>* ListSequence<T>::map(T (*mapper)(const T &element)) {
     ListSequence<T> *inst = this->instance();
 
-    IEnumerator<T>* inst_iter = inst->get_enumerator();  // use enumerator not to repeat "get" and "set" loop
-
-    while (inst_iter->move_next()) {
-        inst_iter->set_current( mapper(inst_iter->get_current()));
-    }
-
-    delete inst_iter;
+    inst->list->transform(mapper);
 
     return inst;
 }

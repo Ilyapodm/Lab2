@@ -343,6 +343,15 @@ void LinkedList<T>::filter(bool (*predicate)(const T&)) {
     tail = previous_node;  
 }
 
+template <typename T>
+void LinkedList<T>::transform(T (*mapper)(const T&)) {
+    Node* current = head;
+    while (current != nullptr) {
+        current->data = mapper(current->data);
+        current = current->next;
+    }
+}
+
 /*******************************************************************
  * Enumerator
  *******************************************************************/
@@ -356,7 +365,7 @@ template <typename T>
 bool LinkedList<T>::ListEnumerator::move_next() {
     if (index == -1)
         current_node = linked_list->head;
-    else
+    else if (current_node != nullptr)  // fallback if user decides use after false return
         current_node = current_node->next;
     
     index++;
@@ -370,10 +379,12 @@ const T& LinkedList<T>::ListEnumerator::get_current() const {
     return current_node->data;
 }
 
-template <typename T>
-void LinkedList<T>::ListEnumerator::set_current(const T &value) {
-    current_node->data = value;
-}
+// template <typename T>
+// void LinkedList<T>::ListEnumerator::set_current(const T &value) {
+//     if (index < 0 || index >= linked_list->get_length())
+//         throw std::out_of_range("set_current(): called in invalid state");
+//     current_node->data = value;
+// }
 
 template <typename T>
 void LinkedList<T>::ListEnumerator::reset() {

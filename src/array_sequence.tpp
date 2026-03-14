@@ -266,10 +266,12 @@ const T& ArraySequence<T>::ArrayEnumerator::get_current() const {
     return array_sequence->get(index);
 }
 
-template <typename T>
-void ArraySequence<T>::ArrayEnumerator::set_current(const T &value) {
-    array_sequence->array->set(index, value);
-}
+// template <typename T>
+// void ArraySequence<T>::ArrayEnumerator::set_current(const T &value) {
+//     if (index < 0 || index >= array_sequence->get_size())
+//         throw std::out_of_range("set_current(): called in invalid state");
+//     array_sequence->array->set(index, value);
+// }
 
 template <typename T>
 void ArraySequence<T>::ArrayEnumerator::reset() {

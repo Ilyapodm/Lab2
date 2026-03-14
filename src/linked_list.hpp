@@ -33,6 +33,7 @@ public:
     T remove_at(int index);
 
     void filter(bool (*predicate)(const T&));  // "where" in list_sequence doesn't have the needed access (for not being O(n^2))
+    void transform(T (*mapper)(const T&));  // map in list_sequence could be fast, but need set_current (mutable inumerator)
 
     LinkedList<T>* concat(const LinkedList<T> *other) const; 
 
@@ -48,7 +49,7 @@ public:
                 
         const T& get_current() const override;  // get current item
 
-        void set_current(const T &value) override;  // set current item
+        // void set_current(const T &value) override;  // set current item
 
         void reset() override;  // move to the beginning
 
