@@ -203,7 +203,7 @@ Sequence<T>* ListSequence<T>::slice(int index, int count, const Sequence<T> &seq
     // inst: [0 .. index) [ seq.get_size() ] [end .. get_size())
     int end = get_size() < index + count ? get_size() : index + count;  // the next element after replaced elements
 
-    Sequence<T> *inst = this->instance();
+    ListSequence<T> *inst = this->instance();
 
     int new_size = index + seq.get_size() + (get_size() - end);
 

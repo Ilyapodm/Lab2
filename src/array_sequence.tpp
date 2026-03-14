@@ -142,7 +142,7 @@ Sequence<T>* ArraySequence<T>::concat(const Sequence<T> &other) const {
             // do not use append because it can create another copy for immutable
             result->array->set(i, array->get(i));
         
-        for (int i = 0; i < other->get_size(); i++) 
+        for (int i = 0; i < other.get_size(); i++) 
             result->array->set(this->get_size() + i, other.get(i));  // have already placed get_size - 1 spaces
         
     } catch (...) {
@@ -210,7 +210,7 @@ Sequence<T>* ArraySequence<T>::slice(int index, int count, const Sequence<T> &se
     // inst: [0 .. index) [ seq.get_size() ] [end .. get_size())
     int end = get_size() < index + count ? get_size() : index + count;  // the next element after replaced elements
 
-    Sequence<T> *inst = this->instance();
+    ArraySequence<T> *inst = this->instance();
 
     int new_size = index + seq.get_size() + (get_size() - end);
 
