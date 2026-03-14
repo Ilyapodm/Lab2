@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ienumerator.hpp"
 #include "linked_list.hpp"
 #include "list_sequence.hpp"
 #include "sequence.hpp"
@@ -181,18 +182,25 @@ template <typename T>
 Sequence<T>* ListSequence<T>::concat(const Sequence<T> &other) const {
     ListSequence<T> *result = this->empty_sequence();
 
+    IEnumerator<T> *this_iter = this->get_enumerator();  // use enumerator to optimize get
+    IEnumerator<T> *other_iter = other.get_enumerator();
     try {
-        for (int i = 0; i < this->get_size(); i++) {
-            result->list->append(this->get(i));
+        while (this_iter->move_next()) {
+            result->list->append(this_iter->get_current());
         }
 
-        for (int i = 0; i < other.get_size(); i++) {
-            result->list->append(other.get(i));
+        while (other_iter->move_next()) {
+            result->list->append(other_iter->get_current());
         }
     } catch (...) {
+        delete this_iter;
+        delete other_iter;
         delete result;
         throw;
     }
+
+    delete this_iter;
+    delete other_iter;
 
     return result;
 }

@@ -8,8 +8,6 @@
 #include "utils.hpp"   // zip, unzip, split — free functions
 
 //BUG Последовательность Битов не готова
-//TODO переписать где во внутрянке get на итератор
-
 
 // ============================================================
 // Tags of different types of sequences
