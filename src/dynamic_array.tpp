@@ -114,6 +114,20 @@ void DynamicArray<T>::set(int index, const T& value) {
     data[index] = value;  // do not use try-catch because 
 }
 
+template <typename T>
+void DynamicArray<T>::remove_at(int index) {
+    if (index < 0 || index >= size)
+        throw std::out_of_range("remove_at: index out of range");
+
+    // store the values, don't have to "delete"
+    // no strong garanty, no mem leaks, but object can be changed incorrectly,
+    // if "=" will fail
+    for (int dst = index; dst + 1 < size; dst++) {
+        data[dst] = data[dst + 1];
+    }
+    resize(size-1);
+}
+
 // changes the logic size of array (size).
 // capacity increases (*2) automatically if don't have enough.
 // does NOT decrease the capacity. Only if resize(0): totaly clear the buffer

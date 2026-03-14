@@ -17,12 +17,14 @@ public:
     int get_capacity() const;
 
     void set(int index, const T& value);
-    
+
+    void remove_at(int index);
+
     void resize(int new_size);  
     
 private:
     T *data;
-    int size;      // means the number of elements + reachable ceils of array in memory
+    int size;      // means the number of elements (reachable ceils of array in memory)
     int capacity;  // all allocated ceils of array in memory
 };
 

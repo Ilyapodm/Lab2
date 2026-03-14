@@ -131,6 +131,43 @@ Sequence<T>* ArraySequence<T>::insert_at(const T &item, int index) {
 }
 
 template <typename T>
+Sequence<T>* ArraySequence<T>::set(const T &item, int index) {
+    if (index < 0 || index >= array->get_size())
+        throw std::out_of_range("set: index out of range");
+
+    ArraySequence<T> *inst = this->instance();
+
+    try {
+        // T operator= can fail: for mutable have to delete too
+        inst->array->set(index, item);
+    } catch (...) {
+        if (this != inst)
+            delete inst;
+        throw;
+    }
+    
+    return inst;
+}
+
+template <typename T>
+Sequence<T>* ArraySequence<T>::remove_at(int index) {
+    if (index < 0 || index >= array->get_size())
+        throw std::out_of_range("remove_at: index out of range");
+
+    ArraySequence<T> *inst = this->instance();
+
+    try {
+    inst->array->remove_at(index);
+    } catch (...) {
+        if (this != inst) 
+            delete inst;
+        throw;
+    }
+
+    return inst;
+}
+
+template <typename T>
 Sequence<T>* ArraySequence<T>::concat(const Sequence<T> &other) const {
     ArraySequence<T> *result = this->empty_sequence();
 
