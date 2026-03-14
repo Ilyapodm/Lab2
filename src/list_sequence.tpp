@@ -201,7 +201,7 @@ Sequence<T>* ListSequence<T>::slice(int index, int count, const Sequence<T> &seq
     if (index < 0 || index >= get_size()) 
         throw std::out_of_range("slice: Index out of range");
         
-    //         left part    deleted        right part
+    //         left part      deleted        right part
     // this: [0 .. index) [index .. end) [end .. get_size())
 
     //       left part        inserted          right part
@@ -210,6 +210,30 @@ Sequence<T>* ListSequence<T>::slice(int index, int count, const Sequence<T> &seq
 
     Sequence<T> *inst = this->instance();
 
-    int new_size = get_size() + seq->get_size() + (get_size() - end);
+    int new_size = index + seq.get_size() + (get_size() - end);
 
+    LinkedList<T> *new_list = new LinkedList<T>();
+
+    try {
+        for (int i = 0; i < index; i++) {
+            new_list->append(get(i));  // copy left side
+        }
+
+        for (int i = 0; i < seq.get_size(); i++) {
+            new_list->append(seq.get(i));  // copy from seq
+        }
+
+        for (int i = end; i < get_size(); i++) {
+            new_list->append(get(i));
+        }
+    } catch (...) {
+        delete new_list;
+        if (inst != this)
+            delete inst;
+        throw;
+    }
+
+    delete inst->list;
+    inst->list = new_list;
+    return inst;
 }

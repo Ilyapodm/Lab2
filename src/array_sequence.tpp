@@ -212,7 +212,7 @@ Sequence<T>* ArraySequence<T>::slice(int index, int count, const Sequence<T> &se
 
     Sequence<T> *inst = this->instance();
 
-    int new_size = get_size() + seq->get_size() + (get_size() - end);
+    int new_size = index + seq->get_size() + (get_size() - end);
 
     DynamicArray<T> *new_array = new DynamicArray<T>(new_size);
 
