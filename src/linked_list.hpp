@@ -47,7 +47,7 @@ public:
     // nested class for enumerator
     class ListEnumerator : public IEnumerator<T> {
     public:
-        ListEnumerator(const LinkedList<T> *linked_list) : linked_list{linked_list}, current_node{nullptr}, index{-1} {}
+        ListEnumerator(const Node *head) : head{head}, current_node{nullptr}, started{0} {}
 
         bool move_next() override;  // move to next element
                 
@@ -58,9 +58,10 @@ public:
         void reset() override;  // move to the beginning
 
     private:
-        int index;
-        Node *current_node;  // we can change Node, but linked list will stay unchanged (length, tail, head will be the same)
-        const LinkedList<T> *linked_list;  //TODO убрать index и на list
+        // we can change Node, but linked list will stay unchanged (length, tail, head will be the same)
+        Node *head;  // do not need the whole list
+        bool started;  // not index
+        Node *current_node;  
     };
 
 private:

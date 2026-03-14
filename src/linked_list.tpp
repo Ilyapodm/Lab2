@@ -374,23 +374,24 @@ void LinkedList<T>::transform(T (*mapper)(const T&)) {
 
 template <typename T>
 IEnumerator<T>* LinkedList<T>::get_enumerator() const {
-        return new ListEnumerator(this);
+        return new ListEnumerator(this->head);
     }
 
 template <typename T>
 bool LinkedList<T>::ListEnumerator::move_next() {
-    if (index == -1)
-        current_node = linked_list->head;
+    if (! started) {
+        current_node = head;
+        started = true;
+    }
     else if (current_node != nullptr)  // fallback if user decides use after false return
         current_node = current_node->next;
-    
-    index++;
+
     return current_node != nullptr;
 }
 
 template <typename T>
 const T& LinkedList<T>::ListEnumerator::get_current() const {
-    if (index < 0 || index >= linked_list->get_length())
+    if (! started || current_node == nullptr)
         throw std::out_of_range("get_current(): called in invalid state");
     return current_node->data;
 }
@@ -404,6 +405,6 @@ const T& LinkedList<T>::ListEnumerator::get_current() const {
 
 template <typename T>
 void LinkedList<T>::ListEnumerator::reset() {
-    index = -1;
+    started = false;
     current_node = nullptr;
 }

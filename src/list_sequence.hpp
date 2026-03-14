@@ -7,18 +7,21 @@
 template <typename T>
 class ListSequence : public Sequence<T> {
 public:
+    // constructors
     ListSequence();
     ListSequence(T *items, int size);  //copy from given list
     ListSequence (const LinkedList<T> &list);
     ListSequence(const ListSequence<T> &other); 
     ~ListSequence() { delete list; }
     
+    // Methods for Mutable/Immutable
     virtual ListSequence<T>* instance() = 0;  // returns who will be changed (copy or actually the object) 
 
     // need it because ArraySequence class is abstract (can't create objects), and in  
     // the methods we don't know mutable or immutable objects we are working with
     virtual ListSequence<T>* empty_sequence() const = 0;  // returns an empty Mutable or Immutable list sequence
 
+    // getters
     const T& get_first() const override;  
     const T& get_last() const override;
     const T& get(int index) const override;
@@ -27,6 +30,7 @@ public:
 
     Sequence<T>* get_subsequence(int start_index, int end_index) const override;
 
+    // operations
     Sequence<T>* append(const T &item) override;
     Sequence<T>* prepend(const T &item) override;
     Sequence<T>* insert_at(const T &item, int index) override;
@@ -36,15 +40,14 @@ public:
 
     Sequence<T>* concat(const Sequence<T> &other) const override;
 
+    // map, where, reduce
     Sequence<T>* map(T (*mapper)(const T &element)) override;
     Sequence<T>* where(bool (*predicate)(const T &element)) override;
     T reduce(T (*reduce_func)(const T &first_element, const T &second_element), const T &start_element) override;  
     Sequence<T>* slice(int i, int count, const Sequence<T> &seq) override;
 
-    // caller owns, must delete
-    IEnumerator<T>* get_enumerator() const override { return this->list->get_enumerator(); }
-
-    
+    // enumerator    
+    IEnumerator<T>* get_enumerator() const override { return this->list->get_enumerator(); } // caller owns, must delete
 
 protected:
     LinkedList<T> *list;
