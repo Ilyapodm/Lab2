@@ -59,9 +59,9 @@ public:
 
     private:
         // we can change Node, but linked list will stay unchanged (length, tail, head will be the same)
-        Node *head;  // do not need the whole list
+        const Node *head;  // do not need the whole list
         bool started;  // not index
-        Node *current_node;  
+        const Node *current_node;  
     };
 
 private:

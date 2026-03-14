@@ -53,6 +53,23 @@ MutableArraySequence<BitEntry*> bit_reg;   // bit-sequences
 // ============================================================
 // Input-Output
 // ============================================================
+void clear_screen() {
+    // \x1B[2J  — clear
+    // \x1B[H   — set cursor at (0,0)
+    std::cout << "\x1B[2J\x1B[H" << std::flush;
+}
+
+void scroll_up() {
+    std::cout << "\x1B[3J\x1B[H" << std::flush;
+}
+
+void wait_for_enter() {
+    std::cin.clear(); // error flags
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cout << "Нажмите Enter для продолжения...";
+    std::cin.get();
+}
+
 int read_int(const char* prompt = "") {
     int v;
     while (true) {
@@ -109,7 +126,7 @@ void add_bit(BitKind kind, BitSequence* ptr) {
 }
 
 // if operation returns a new object (immutable) — add to reg
-// Для mutable inst == ptr, объект уже в реестре.
+// for mutable inst == ptr, object has already been in reg
 void maybe_add_seq(SeqKind kind, Sequence<int>* result, Sequence<int>* original) {
     if (result != original) add_seq(kind, result);
     else { std::cout << "  → Объект изменён на месте.\n"; print_seq_registry(); }
@@ -226,13 +243,14 @@ void cmd_seq_ops(int idx) {
     SeqKind        k = e->kind;
 
     std::cout << "\n  1.  append          2.  prepend\n"
-              << "  3.  insert_at       4.  get(index)\n"
-              << "  5.  get_first       6.  get_last\n"
-              << "  7.  get_size        8.  get_subsequence\n"
-              << "  9.  concat          10. map\n"
-              << "  11. where           12. reduce\n"
-              << "  13. zip             14. split\n"
-              << "  15. slice           16. печать\n";
+              << "  3.  insert_at       4.  set\n"
+              << "  5.  remove_at       6.  get\n"
+              << "  7.  get_first       8.  get_last\n"
+              << "  9.  get_size        10.  get_subsequence\n"
+              << "  11.  concat         12. map\n"
+              << "  13. where           14. reduce\n"
+              << "  15. zip             16. split\n"
+              << "  17. slice           18. печать\n";
     int op = read_int("  > ");
 
     switch (op) {
@@ -254,23 +272,36 @@ void cmd_seq_ops(int idx) {
             break;
         }
         case 4: {
+            int v   = read_int("  Значение: ");
+            int pos = read_int("  Позиция: ");
+            try { maybe_add_seq(k, s->set(v, pos), s); }
+            catch (const std::exception& ex) { std::cout << "  [!] " << ex.what() << "\n"; }
+            break;
+        }
+        case 5: {
+            int pos = read_int("  Позиция: ");
+            try { maybe_add_seq(k, s->remove_at(pos), s); }
+            catch (const std::exception& ex) { std::cout << "  [!] " << ex.what() << "\n"; }
+            break;
+        }
+        case 6: {
             int i = read_int("  Индекс: ");
             try { std::cout << "  [" << i << "] = " << s->get(i) << "\n"; }
             catch (const std::exception& ex) { std::cout << "  [!] " << ex.what() << "\n"; }
             break;
         }
-        case 5:
+        case 7:
             try { std::cout << "  first = " << s->get_first() << "\n"; }
             catch (const std::exception& ex) { std::cout << "  [!] " << ex.what() << "\n"; }
             break;
-        case 6:
+        case 8:
             try { std::cout << "  last = " << s->get_last() << "\n"; }
             catch (const std::exception& ex) { std::cout << "  [!] " << ex.what() << "\n"; }
             break;
-        case 7:
+        case 9:
             std::cout << "  size = " << s->get_size() << "\n";
             break;
-        case 8: {
+        case 10: {
             int from = read_int("  От: ");
             int to   = read_int("  До: ");
             try {
@@ -281,7 +312,7 @@ void cmd_seq_ops(int idx) {
             catch (const std::exception& ex) { std::cout << "  [!] " << ex.what() << "\n"; }
             break;
         }
-        case 9: {
+        case 11: {
             std::cout << "  1. Из реестра  2. Ввести новую временную\n";
             Sequence<int>* other = nullptr;
             bool owns = false;
@@ -296,19 +327,19 @@ void cmd_seq_ops(int idx) {
             add_seq(k, res); // concat always new object
             break;
         }
-        case 10:
+        case 12:
             maybe_add_seq(k, s->map(pick_map_func()), s);
             break;
-        case 11:
+        case 13:
             maybe_add_seq(k, s->where(pick_where_func()), s);
             break;
-        case 12: {
+        case 14: {
             auto  f   = pick_reduce_func();
             int start = read_int("  Начальное значение: ");
             std::cout << "  Результат: " << s->reduce(f, start) << "\n";
             break;
         }
-        case 13: {
+        case 15: {
             // zip returns MutableArraySequence<Pair<int,int>>*
             // Impossible to store him in the reg: type doesn't match
             // just print, don't add to reg
@@ -338,7 +369,7 @@ void cmd_seq_ops(int idx) {
             delete res;
             break;
         }
-        case 14: {
+        case 16: {
             int split_val = read_int("  Элемент-разделитель: ");
             auto* res = split<int>(*s, split_val);
             std::cout << "  Фрагментов: " << res->get_size() << "\n";
@@ -352,7 +383,7 @@ void cmd_seq_ops(int idx) {
             delete res;
             break;
         }
-        case 15: {
+        case 17: {
             int index = read_int("  Индекс (может быть отрицательным): ");
             int count = read_int("  Количество удаляемых: ");
             auto* ins = read_int_array();
@@ -366,7 +397,7 @@ void cmd_seq_ops(int idx) {
             }
             break;
         }
-        case 16:
+        case 18:
             std::cout << *s << "\n";
             break;
         default:
