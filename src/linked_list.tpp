@@ -3,6 +3,10 @@
 #include "linked_list.hpp"
 #include <stdexcept>
 
+/*******************************************************************
+ * constructors and operator=
+ *******************************************************************/
+
 template <typename T>
 LinkedList<T>::LinkedList() : head{nullptr}, tail{nullptr}, length{0} {}
 
@@ -112,6 +116,10 @@ LinkedList<T>& LinkedList<T>::operator=(const LinkedList<T>& other) {
     return *this;
 }
 
+/*******************************************************************
+ * getters
+ *******************************************************************/
+
 template <typename T>
 const T& LinkedList<T>::get_first() const {
     if (head == nullptr) 
@@ -178,19 +186,9 @@ LinkedList<T>* LinkedList<T>::get_sublist(int start_index, int end_index) const 
     return result;
 }
 
-template <typename T>
-void LinkedList<T>::set(int index, const T& item) {
-    if (index >= this->length || index < 0) {
-        throw std::out_of_range("set: Index out of range");
-    }
-    
-    Node *current_node = head;
-    for (int i = 0; i < index; i++) {
-        current_node = current_node->next;
-    }
-
-    current_node->data = item;
-}
+/*******************************************************************
+ * operations
+ *******************************************************************/
 
 template <typename T>
 void LinkedList<T>::append(const T& item) {
@@ -257,6 +255,20 @@ void LinkedList<T>::insert_at(const T& item, int index) {
 }
 
 template <typename T>
+void LinkedList<T>::set(int index, const T& item) {
+    if (index >= this->length || index < 0) {
+        throw std::out_of_range("set: Index out of range");
+    }
+    
+    Node *current_node = head;
+    for (int i = 0; i < index; i++) {
+        current_node = current_node->next;
+    }
+
+    current_node->data = item;
+}
+
+template <typename T>
 T LinkedList<T>::remove_at(int index) {
     if (index < 0 || index >= get_length())
         throw std::out_of_range("remove_at: Index out of range");
@@ -319,6 +331,10 @@ LinkedList<T>* LinkedList<T>::concat(const LinkedList<T> *other) const {
 
     return result;
 }
+
+/*******************************************************************
+ * heigher-order functions (map, where...)
+ *******************************************************************/
 
 template <typename T>
 void LinkedList<T>::filter(bool (*predicate)(const T&)) {

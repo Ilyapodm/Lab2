@@ -30,6 +30,10 @@ public:
     Sequence<T>* append(const T &item) override;
     Sequence<T>* prepend(const T &item) override;
     Sequence<T>* insert_at(const T &item, int index) override;
+    Sequence<T>* set(const T &item, int index) override;
+
+    Sequence<T>* remove_at(int index) override;
+
     Sequence<T>* concat(const Sequence<T> &other) const override;
 
     Sequence<T>* map(T (*mapper)(const T &element)) override;

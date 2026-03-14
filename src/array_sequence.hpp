@@ -81,16 +81,6 @@ public:
         *this->array = *other.array; // DynamicArray::operator=
         return *this;
     }
-    // for menu main array
-    void remove_at(int index) {
-        if (index < 0 || index >= this->get_size())
-            throw std::out_of_range("remove_at: index out of range");
-
-        for (int i = index; i < this->get_size() - 1; i++)
-            this->array->set(i, this->array->get(i + 1));
-
-        this->array->resize(this->get_size() - 1);
-    }
 
 protected:
     ArraySequence<T>* instance() override {

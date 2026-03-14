@@ -5,6 +5,10 @@
 #include "sequence.hpp"
 #include <stdexcept>
 
+/*******************************************************************
+ * constructors
+ *******************************************************************/
+
 template <typename T>
 ListSequence<T>::ListSequence() {
     list = new LinkedList<T>();
@@ -24,6 +28,10 @@ template <typename T>
 ListSequence<T>::ListSequence(const ListSequence<T> &other) {
     list = new LinkedList<T>(*other.list);
 }
+
+/*******************************************************************
+ * getters
+ *******************************************************************/
 
 template <typename T>
 const T& ListSequence<T>::get_first() const {
@@ -72,6 +80,10 @@ Sequence<T>* ListSequence<T>::get_subsequence(int start_index, int end_index) co
 
     return result;
 }
+
+/*******************************************************************
+ * operations
+ *******************************************************************/
 
 template <typename T>
 Sequence<T>* ListSequence<T>::append(const T &item) {
@@ -122,6 +134,43 @@ Sequence<T>* ListSequence<T>::insert_at(const T &item, int index) {
         // in this case we lose inst, so need to delete
         if (inst != this) 
             delete inst;  
+        throw;
+    }
+
+    return inst;
+}
+
+template <typename T>
+Sequence<T>* ListSequence<T>::set(const T &item, int index) {
+    if (index < 0 || index >= get_size())
+        throw std::out_of_range("set: index out of range");
+
+    ListSequence<T> *inst = this->instance();
+
+    try {
+        // T operator= can fail: for mutable have to delete too
+        inst->list->set(index, item);
+    } catch (...) {
+        if (this != inst)
+            delete inst;
+        throw;
+    }
+    
+    return inst;
+}
+
+template <typename T>
+Sequence<T>* ListSequence<T>::remove_at(int index) {
+    if (index < 0 || index >= get_size())
+        throw std::out_of_range("remove_at: index out of range");
+
+    ListSequence<T> *inst = this->instance();
+
+    try {
+    inst->list->remove_at(index);
+    } catch (...) {
+        if (this != inst) 
+            delete inst;
         throw;
     }
 
@@ -203,7 +252,7 @@ Sequence<T>* ListSequence<T>::slice(int index, int count, const Sequence<T> &seq
     // inst: [0 .. index) [ seq.get_size() ] [end .. get_size())
     int end = get_size() < index + count ? get_size() : index + count;  // the next element after replaced elements
 
-    ListSequence<T> *inst = this->instance();
+    Sequence<T> *inst = this->instance();
 
     int new_size = index + seq.get_size() + (get_size() - end);
 

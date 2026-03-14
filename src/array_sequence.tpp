@@ -132,7 +132,7 @@ Sequence<T>* ArraySequence<T>::insert_at(const T &item, int index) {
 
 template <typename T>
 Sequence<T>* ArraySequence<T>::set(const T &item, int index) {
-    if (index < 0 || index >= array->get_size())
+    if (index < 0 || index >= get_size())
         throw std::out_of_range("set: index out of range");
 
     ArraySequence<T> *inst = this->instance();
@@ -151,7 +151,7 @@ Sequence<T>* ArraySequence<T>::set(const T &item, int index) {
 
 template <typename T>
 Sequence<T>* ArraySequence<T>::remove_at(int index) {
-    if (index < 0 || index >= array->get_size())
+    if (index < 0 || index >= get_size())
         throw std::out_of_range("remove_at: index out of range");
 
     ArraySequence<T> *inst = this->instance();
