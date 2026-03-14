@@ -147,7 +147,7 @@ TEST_P(SequenceInterfaceTest, Concat_JoinsTwo) {
         if (next != s && s != GetParam()) delete s;
         s = next;
     }
-    Sequence<int>* result = s->concat(other);
+    Sequence<int>* result = s->concat(*other);
     EXPECT_EQ(result->get_size(), 5);
     EXPECT_EQ(result->get(0), 10);
     EXPECT_EQ(result->get(4), 3);

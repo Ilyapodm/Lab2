@@ -3,6 +3,7 @@
 #include "option.hpp"
 #include "ienumerable.hpp"
 
+//TODO сделать удаление элемента, set
 template <typename T>
 class Sequence : public IEnumerable<T> {
 public:
@@ -21,7 +22,7 @@ public:
     virtual Sequence<T>* append(const T& item) = 0;
     virtual Sequence<T>* prepend(const T& item) = 0;
     virtual Sequence<T>* insert_at(const T& item, int index) = 0;
-    virtual Sequence<T>* concat(Sequence<T> *list) const = 0;
+    virtual Sequence<T>* concat(const Sequence<T> &list) const = 0;
 
     virtual Sequence<T>* map(T (*mapper)(const T& element)) = 0;
     virtual Sequence<T>* where(bool (*predicate)(const T& element)) = 0;

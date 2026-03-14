@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include "array_sequence.hpp"
-
+//BUG не написано slice
 /*******************************************************************
  * Mutable
  *******************************************************************/
@@ -44,6 +44,17 @@ TEST(MutableArraySequence, where_MutatesInPlace) {
     EXPECT_EQ(s.get(1), 5);
 }
 
+TEST(MutableArraySequence, slice_MutatesInPlace) {
+    int d1[] = {1, 2, 3, 4, 5};
+    int d2[] = {99, 88};
+    MutableArraySequence<int> s(d1, 5);
+    MutableArraySequence<int> a(d2, 2);
+    Sequence<int>* ret = s.slice(1, 2, a);
+    EXPECT_EQ(ret, &s);
+    EXPECT_EQ(s.get_size(), 5);
+    EXPECT_EQ(s.get(0), 1);
+    EXPECT_EQ(s.get(1), 99);
+}
 /*******************************************************************
  * Immutable
  *******************************************************************/
@@ -97,6 +108,15 @@ TEST(ImmutableArraySequence, where_OriginalUnchanged) {
     EXPECT_EQ(ret->get_size(), 2);
     delete ret;
 }
+
+// TEST(ImmutableArraySequence, where_OriginalUnchanged) {
+//     int d[] = {1, 2, 3, 4};
+//     ImmutableArraySequence<int> s(d, 4);
+//     Sequence<int>* ret = s.where([](const int& x) { return x % 2 == 0; });
+//     EXPECT_EQ(s.get_size(), 4);
+//     EXPECT_EQ(ret->get_size(), 2);
+//     delete ret;
+// }
 
 /*******************************************************************
  * get_subsequence - always new object
@@ -162,7 +182,7 @@ TEST(ArraySequence_Concat, ResultIsNew_OriginalUnchanged) {
     int d1[] = {1, 2}, d2[] = {3, 4, 5};
     MutableArraySequence<int> a(d1, 2);
     MutableArraySequence<int> b(d2, 3);
-    Sequence<int>* res = a.concat(&b);
+    Sequence<int>* res = a.concat(b);
     EXPECT_NE(res, &a);
     EXPECT_EQ(a.get_size(), 2);  // original doesn't change
     EXPECT_EQ(res->get_size(), 5);
@@ -175,7 +195,7 @@ TEST(ArraySequence_Concat, WithEmpty) {
     int d[] = {1, 2, 3};
     MutableArraySequence<int> a(d, 3);
     MutableArraySequence<int> empty;
-    Sequence<int>* res = a.concat(&empty);
+    Sequence<int>* res = a.concat(empty);
     EXPECT_EQ(res->get_size(), 3);
     delete res;
 }

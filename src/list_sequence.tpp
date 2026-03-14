@@ -129,7 +129,7 @@ Sequence<T>* ListSequence<T>::insert_at(const T &item, int index) {
 }
 
 template <typename T>
-Sequence<T>* ListSequence<T>::concat(Sequence<T> *other) const {
+Sequence<T>* ListSequence<T>::concat(const Sequence<T> &other) const {
     ListSequence<T> *result = this->empty_sequence();
 
     try {
@@ -137,8 +137,8 @@ Sequence<T>* ListSequence<T>::concat(Sequence<T> *other) const {
             result->list->append(this->get(i));
         }
 
-        for (int i = 0; i < other->get_size(); i++) {
-            result->list->append(other->get(i));
+        for (int i = 0; i < other.get_size(); i++) {
+            result->list->append(other.get(i));
         }
     } catch (...) {
         delete result;

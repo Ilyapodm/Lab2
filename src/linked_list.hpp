@@ -56,7 +56,7 @@ public:
     private:
         int index;
         Node *current_node;  // we can change Node, but linked list will stay unchanged (length, tail, head will be the same)
-        const LinkedList<T> *linked_list;
+        const LinkedList<T> *linked_list;  //TODO убрать index и на list
     };
 
 private:

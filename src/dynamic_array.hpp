@@ -18,7 +18,7 @@ public:
 
     void set(int index, const T& value);
     
-    void resize(int new_size);
+    void resize(int new_size);  
     
 private:
     T *data;

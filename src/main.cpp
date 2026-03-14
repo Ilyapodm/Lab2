@@ -1,514 +1,494 @@
 #include <iostream>
-#include <stdexcept>
-#include <climits>
 #include <limits>
-#include <string>
 
 #include "array_sequence.hpp"
 #include "list_sequence.hpp"
 #include "bit_sequence.hpp"
+#include "sequence.hpp"
+#include "utils.hpp"   // zip, unzip, split — free functions
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  ШАГ 1: I/O утилиты
-// ═══════════════════════════════════════════════════════════════════════════
+//BUG Последовательность Битов не готова
+//TODO переписать где во внутрянке get на итератор
 
-static void flush_cin() {
-    std::cin.clear();
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+// ============================================================
+// Tags of different types of sequences
+// ============================================================
+enum class SeqKind  { MutArray, ImmArray, MutList, ImmList };
+enum class BitKind  { MutBit, ImmBit };
+
+const char* seq_kind_name(SeqKind k) {
+    switch (k) {
+        case SeqKind::MutArray: return "Mutable   ArraySequence<int>";
+        case SeqKind::ImmArray: return "Immutable ArraySequence<int>";
+        case SeqKind::MutList:  return "Mutable   ListSequence<int>";
+        case SeqKind::ImmList:  return "Immutable ListSequence<int>";
+    }
+    return "?";
 }
+const char* bit_kind_name(BitKind k) {
+    return k == BitKind::MutBit ? "Mutable BitSequence" : "Immutable BitSequence";
+}
+bool is_mutable(SeqKind k) { return k == SeqKind::MutArray || k == SeqKind::MutList; }
+bool is_mutable(BitKind k) { return k == BitKind::MutBit; }
 
-static int ask_int(const std::string& prompt) {
+// ============================================================
+// Regs
+// ============================================================
+struct SeqEntry {
+    SeqKind        kind;
+    Sequence<int> *ptr;
+    ~SeqEntry() { delete ptr; }
+};
+
+struct BitEntry {
+    BitKind      kind;
+    BitSequence *ptr;
+    ~BitEntry() { delete ptr; }
+};
+
+
+// sequence<Bit> != sequence<int>, so need 2 independed regs
+MutableArraySequence<SeqEntry*> seq_reg;   // int-sequences
+MutableArraySequence<BitEntry*> bit_reg;   // bit-sequences
+
+// ============================================================
+// Input-Output
+// ============================================================
+int read_int(const char* prompt = "") {
     int v;
-    for (;;) {
-        std::cout << prompt;
-        if (std::cin >> v) { flush_cin(); return v; }
-        std::cout << "  [!] Введите целое число\n";
-        flush_cin();
+    while (true) {
+        if (*prompt) std::cout << prompt;
+        if (std::cin >> v) { std::cin.ignore(); return v; }
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::cout << "  [!] Введите целое число.\n";
     }
 }
 
-static int ask_range(const std::string& prompt, int lo, int hi) {
-    for (;;) {
-        int v = ask_int(prompt);
-        if (v >= lo && v <= hi) return v;
-        std::cout << "  [!] Введите от " << lo << " до " << hi << "\n";
+void print_seq_registry() {
+    for (int i = 0; i < seq_reg.get_size(); i++)
+        std::cout << "  " << (i+1) << ". " << *seq_reg[i]->ptr
+                  << "  — " << seq_kind_name(seq_reg[i]->kind) << "\n";
+}
+
+void print_bit_registry() {
+    for (int i = 0; i < bit_reg.get_size(); i++)
+        std::cout << "  " << (i+1) << ". " << *bit_reg[i]->ptr
+                  << "  — " << bit_kind_name(bit_reg[i]->kind) << "\n";
+}
+
+// Выбор индекса из реестра int-последовательностей (1-based → 0-based)
+int pick_seq(const char* prompt = "  Номер: ") {
+    while (true) {
+        print_seq_registry();
+        int n = read_int(prompt);
+        if (n >= 1 && n <= seq_reg.get_size()) return n - 1;
+        std::cout << "  [!] Номер вне диапазона.\n";
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  ШАГ 2: Вывод последовательностей
-// ═══════════════════════════════════════════════════════════════════════════
-
-static void print_int_seq(const Sequence<int>* s, const std::string& label = "Sequence<int>") {
-    std::cout << "\n  " << label << " [size=" << s->get_size() << "]: ";
-    if (s->get_size() == 0) { std::cout << "(пусто)\n"; return; }
-    for (int i = 0; i < s->get_size(); i++)
-        std::cout << s->get(i) << (i + 1 < s->get_size() ? ", " : "\n");
-}
-
-static void print_bit_seq(const Sequence<Bit>* s, const std::string& label = "BitSequence") {
-    std::cout << "\n  " << label << " [size=" << s->get_size() << "]: ";
-    if (s->get_size() == 0) { std::cout << "(пусто)\n"; return; }
-    for (int i = 0; i < s->get_size(); i++)
-        std::cout << (s->get(i).get() ? '1' : '0');
-    std::cout << "\n";
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  ШАГ 3: Функторы для map / where / reduce
-//  Используем обычные указатели на функции — лямбды здесь не подходят,
-//  т.к. Sequence::map принимает T(*)(const T&), а не std::function
-// ═══════════════════════════════════════════════════════════════════════════
-
-// int map
-static int fn_x2(const int& x)  { return x * 2; }
-static int fn_sq(const int& x)  { return x * x; }
-static int fn_neg(const int& x) { return -x; }
-static int fn_inc(const int& x) { return x + 1; }
-
-// int where
-static bool fn_pos(const int& x)  { return x > 0; }
-static bool fn_neg2(const int& x) { return x < 0; }
-static bool fn_even(const int& x) { return x % 2 == 0; }
-static bool fn_odd(const int& x)  { return x % 2 != 0; }
-
-// int reduce
-static int fn_sum(const int& a, const int& b)  { return a + b; }
-static int fn_prod(const int& a, const int& b) { return a * b; }
-static int fn_max(const int& a, const int& b)  { return a > b ? a : b; }
-static int fn_min(const int& a, const int& b)  { return a < b ? a : b; }
-
-// Bit map
-static Bit fn_bnot(const Bit& b) { return ~b; }
-static Bit fn_bid(const Bit& b)  { return b; }
-
-// Bit where
-static bool fn_is1(const Bit& b) { return  b.get(); }
-static bool fn_is0(const Bit& b) { return !b.get(); }
-
-// Bit reduce
-static Bit fn_band(const Bit& a, const Bit& b) { return a & b; }
-static Bit fn_bor(const Bit& a, const Bit& b)  { return a | b; }
-static Bit fn_bxor(const Bit& a, const Bit& b) { return a ^ b; }
-
-// ─── Меню выбора функторов ───────────────────────────────────────────────
-
-static int (*pick_map_int())(const int&) {
-    std::cout << "  Функция map:\n"
-              << "    1. x*2   2. x*x   3. -x   4. x+1\n";
-    switch (ask_range("  Выбор: ", 1, 4)) {
-        case 1: return fn_x2;
-        case 2: return fn_sq;
-        case 3: return fn_neg;
-        default: return fn_inc;
+// Выбор индекса из реестра BitSequence (1-based → 0-based)
+int pick_bit(const char* prompt = "  Номер: ") {
+    while (true) {
+        print_bit_registry();
+        int n = read_int(prompt);
+        if (n >= 1 && n <= bit_reg.get_size()) return n - 1;
+        std::cout << "  [!] Номер вне диапазона.\n";
     }
 }
 
-static bool (*pick_where_int())(const int&) {
-    std::cout << "  Условие where:\n"
-              << "    1. x>0   2. x<0   3. чётное   4. нечётное\n";
-    switch (ask_range("  Выбор: ", 1, 4)) {
-        case 1: return fn_pos;
-        case 2: return fn_neg2;
-        case 3: return fn_even;
-        default: return fn_odd;
-    }
+void add_seq(SeqKind kind, Sequence<int>* ptr) {
+    seq_reg.append(new SeqEntry{kind, ptr});
+    std::cout << "  → Добавлено в реестр int-последовательностей под номером "
+              << seq_reg.get_size() << ".\n";
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  ШАГ 4: Ввод временных последовательностей (для concat/битовых операций)
-// ═══════════════════════════════════════════════════════════════════════════
+void add_bit(BitKind kind, BitSequence* ptr) {
+    bit_reg.append(new BitEntry{kind, ptr});
+    std::cout << "  → Добавлено в реестр BitSequence под номером "
+              << bit_reg.get_size() << ".\n";
+}
 
-// Всегда создаёт MutableArraySequence — concat принимает Sequence<T>*, тип не важен
-static Sequence<int>* input_int_seq() {
-    int n = ask_range("    Кол-во элементов: ", 0, 10000);
+// if operation returns a new object (immutable) — add to reg
+// Для mutable inst == ptr, объект уже в реестре.
+void maybe_add_seq(SeqKind kind, Sequence<int>* result, Sequence<int>* original) {
+    if (result != original) add_seq(kind, result);
+    else { std::cout << "  → Объект изменён на месте.\n"; print_seq_registry(); }
+}
+
+void maybe_add_bit(BitKind kind, BitSequence* result, BitSequence* original) {
+    if (result != original) add_bit(kind, result);
+    else { std::cout << "  → Объект изменён на месте.\n"; print_bit_registry(); }
+}
+
+// ============================================================
+// Reading int array
+// ============================================================
+MutableArraySequence<int>* read_int_array() {
+    int n = read_int("  Количество элементов: ");
     auto* s = new MutableArraySequence<int>();
-    for (int i = 0; i < n; i++)
-        s->append(ask_int("    [" + std::to_string(i) + "]: "));
-    return s;
-}
-
-// Строим через append, чтобы обойти баг в BitSequence(bool*, int):
-// там отсутствует вызов ArraySequence<Bit>(size) → UB при size > 0
-static MutableBitSequence* input_bit_seq() {
-    int n = ask_range("    Кол-во бит: ", 0, 10000);
-    auto* s = new MutableBitSequence();
     for (int i = 0; i < n; i++) {
-        int b = ask_range("    бит[" + std::to_string(i) + "] (0/1): ", 0, 1);
-        s->append(Bit(b != 0));  // MutableBitSequence::append → instance()=this
+        std::cout << "  [" << i << "]: ";
+        s->append(read_int());
     }
     return s;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  ШАГ 5: Инициализация основной последовательности
-//  Единый паттерн владения: if (next != s) { delete s; s = next; }
-//  Работает и для Mutable (next == s), и для Immutable (next — новый объект)
-// ═══════════════════════════════════════════════════════════════════════════
+// ============================================================
+// map / where / reduce
+// ============================================================
+int map_double(const int& x) { return x * 2; }
+int map_negate(const int& x) { return -x; }
+int map_square(const int& x) { return x * x; }
+int map_inc   (const int& x) { return x + 1; }
 
-static Sequence<int>* init_int_seq(int type, bool is_mutable) {
-    std::cout << "  Инициализация:\n"
-              << "    1. Пустая\n"
-              << "    2. Из ввода\n";
-    int n = (ask_range("  Выбор: ", 1, 2) == 2)
-            ? ask_range("  Кол-во элементов: ", 0, 10000)
-            : 0;
+bool where_positive(const int& x) { return x > 0; }
+bool where_even    (const int& x) { return x % 2 == 0; }
+bool where_odd     (const int& x) { return x % 2 != 0; }
 
-    // Создаём конкретный тип — дальше работаем через Sequence<int>*
-    Sequence<int>* s;
-    if      (type == 1 && is_mutable)  s = new MutableArraySequence<int>();
-    else if (type == 1 && !is_mutable) s = new ImmutableArraySequence<int>();
-    else if (type == 2 && is_mutable)  s = new MutableListSequence<int>();
-    else                               s = new ImmutableListSequence<int>();
+int reduce_sum(const int& a, const int& b) { return a + b; }
+int reduce_mul(const int& a, const int& b) { return a * b; }
+int reduce_max(const int& a, const int& b) { return a > b ? a : b; }
+int reduce_min(const int& a, const int& b) { return a < b ? a : b; }
 
-    for (int i = 0; i < n; i++) {
-        int v = ask_int("  [" + std::to_string(i) + "]: ");
-        Sequence<int>* next = s->append(v);
-        if (next != s) { delete s; s = next; }
+// bits
+bool where_bit_one (const Bit& x) { return  x.get(); }
+bool where_bit_zero(const Bit& x) { return !x.get(); }
+
+int (*pick_map_func())(const int&) {
+    std::cout << "  1. x*2  2. -x  3. x²  4. x+1\n";
+    switch (read_int("  > ")) {
+        case 1: return map_double; case 2: return map_negate;
+        case 3: return map_square; default: return map_inc;
     }
-    return s;
+}
+bool (*pick_where_func())(const int&) {
+    std::cout << "  1. x>0  2. чётные  3. нечётные\n";
+    switch (read_int("  > ")) {
+        case 1: return where_positive; case 2: return where_even;
+        default: return where_odd;
+    }
+}
+int (*pick_reduce_func())(const int&, const int&) {
+    std::cout << "  1. сумма  2. произведение  3. max  4. min\n";
+    switch (read_int("  > ")) {
+        case 1: return reduce_sum; case 2: return reduce_mul;
+        case 3: return reduce_max; default: return reduce_min;
+    }
 }
 
-static BitSequence* init_bit_seq(bool is_mutable) {
-    std::cout << "  Инициализация:\n"
-              << "    1. Пустая\n"
-              << "    2. Из ввода\n";
-    int n = (ask_range("  Выбор: ", 1, 2) == 2)
-            ? ask_range("  Кол-во бит: ", 0, 10000)
-            : 0;
+// ============================================================
+// Creating new sequence
+// ============================================================
+void cmd_create_seq() {
+    std::cout << "  1. Mutable ArraySequence<int>\n"
+              << "  2. Immutable ArraySequence<int>\n"
+              << "  3. Mutable ListSequence<int>\n"
+              << "  4. Immutable ListSequence<int>\n";
+    int choice = read_int("  > ");
 
-    // Собираем через Sequence<Bit>*, потом приводим
-    Sequence<Bit>* s = is_mutable
-        ? (Sequence<Bit>*)new MutableBitSequence()
-        : (Sequence<Bit>*)new ImmutableBitSequence();
+    auto* tmp = read_int_array();
+    int   sz  = tmp->get_size();
+    int*  raw = new int[sz];
+    for (int i = 0; i < sz; i++) raw[i] = (*tmp)[i];
+    delete tmp;
 
-    for (int i = 0; i < n; i++) {
-        int b = ask_range("  бит[" + std::to_string(i) + "] (0/1): ", 0, 1);
-        Sequence<Bit>* next = s->append(Bit(b != 0));
-        if (next != s) { delete s; s = next; }
+    switch (choice) {
+        case 1: add_seq(SeqKind::MutArray, new MutableArraySequence<int>(raw, sz));   break;
+        case 2: add_seq(SeqKind::ImmArray, new ImmutableArraySequence<int>(raw, sz)); break;
+        case 3: add_seq(SeqKind::MutList,  new MutableListSequence<int>(raw, sz));    break;
+        case 4: add_seq(SeqKind::ImmList,  new ImmutableListSequence<int>(raw, sz));  break;
+        default: std::cout << "  [!] Неверный выбор.\n";
     }
-    return static_cast<BitSequence*>(s);
+    delete[] raw;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  ШАГ 6: Основной цикл — Sequence<int>
-// ═══════════════════════════════════════════════════════════════════════════
+void cmd_create_bit() {
+    std::cout << "  1. Mutable BitSequence\n"
+              << "  2. Immutable BitSequence\n";
+    int choice = read_int("  > ");
+    int n = read_int("  Количество бит: ");
+    bool* bits = new bool[n];
+    for (int i = 0; i < n; i++) {
+        std::cout << "  бит[" << i << "] (0/1): ";
+        bits[i] = (read_int() != 0);
+    }
+    if (choice == 1) add_bit(BitKind::MutBit, new MutableBitSequence(bits, n));
+    else             add_bit(BitKind::ImmBit, new ImmutableBitSequence(bits, n));
+    delete[] bits;
+}
 
-static void run_int(Sequence<int>* seq, bool is_mutable) {
-    std::cout << "\n  ✓ Создана " << (is_mutable ? "Mutable" : "Immutable")
-              << " Sequence<int>.";
-    print_int_seq(seq);
+// ============================================================
+// Operation int sequences
+// ============================================================
+void cmd_seq_ops(int idx) {
+    SeqEntry*      e = seq_reg[idx];
+    Sequence<int>* s = e->ptr;
+    SeqKind        k = e->kind;
 
-    for (;;) {
-        std::cout << "\n┌─ Sequence<int> ["
-                  << (is_mutable ? "Mutable" : "Immutable") << "] ───────────────\n"
-                  << "│  1. append           7. get_subsequence\n"
-                  << "│  2. prepend          8. concat\n"
-                  << "│  3. insert_at        9. map\n"
-                  << "│  4. get(index)      10. where\n"
-                  << "│  5. get_first/last  11. reduce\n"
-                  << "│  6. get_size        12. Печать\n"
-                  << "│  0. ← Назад\n"
-                  << "└──────────────────────────────────────────\n";
+    std::cout << "\n  1.  append          2.  prepend\n"
+              << "  3.  insert_at       4.  get(index)\n"
+              << "  5.  get_first       6.  get_last\n"
+              << "  7.  get_size        8.  get_subsequence\n"
+              << "  9.  concat          10. map\n"
+              << "  11. where           12. reduce\n"
+              << "  13. zip             14. split\n"
+              << "  15. slice           16. печать\n";
+    int op = read_int("  > ");
 
-        int cmd = ask_range("  Выбор: ", 0, 12);
-        if (cmd == 0) break;
-
-        try {
-            switch (cmd) {
-                case 1: {
-                    int v = ask_int("  Значение: ");
-                    Sequence<int>* res = seq->append(v);
-                    if (res != seq) { delete seq; seq = res; }
-                    print_int_seq(seq, "После append");
-                    break;
-                }
-                case 2: {
-                    int v = ask_int("  Значение: ");
-                    Sequence<int>* res = seq->prepend(v);
-                    if (res != seq) { delete seq; seq = res; }
-                    print_int_seq(seq, "После prepend");
-                    break;
-                }
-                case 3: {
-                    std::cout << "  Размер: " << seq->get_size()
-                              << ", допустимые индексы: 0.." << seq->get_size() << "\n";
-                    int idx = ask_int("  Индекс: ");
-                    int v   = ask_int("  Значение: ");
-                    Sequence<int>* res = seq->insert_at(v, idx);
-                    if (res != seq) { delete seq; seq = res; }
-                    print_int_seq(seq, "После insert_at");
-                    break;
-                }
-                case 4: {
-                    int idx = ask_int("  Индекс: ");
-                    std::cout << "  [" << idx << "] = " << seq->get(idx) << "\n";
-                    break;
-                }
-                case 5: {
-                    std::cout << "  get_first() = " << seq->get_first() << "\n"
-                              << "  get_last()  = " << seq->get_last()  << "\n";
-                    break;
-                }
-                case 6: {
-                    std::cout << "  get_size() = " << seq->get_size() << "\n";
-                    break;
-                }
-                case 7: {
-                    std::cout << "  Размер: " << seq->get_size() << "\n";
-                    int s = ask_int("  start: ");
-                    int e = ask_int("  end:   ");
-                    Sequence<int>* sub = seq->get_subsequence(s, e);
-                    print_int_seq(sub, "Подпоследовательность");
-                    delete sub;  // get_subsequence всегда новый объект
-                    break;
-                }
-                case 8: {
-                    std::cout << "  Введите 'other':\n";
-                    Sequence<int>* other = input_int_seq();
-                    Sequence<int>* res   = seq->concat(other);
-                    print_int_seq(res, "Результат concat");
-                    delete res;    // concat всегда новый объект
-                    delete other;
-                    break;
-                }
-                case 9: {
-                    auto* fn = pick_map_int();
-                    Sequence<int>* res = seq->map(fn);
-                    if (res != seq) { delete seq; seq = res; }
-                    print_int_seq(seq, "После map");
-                    break;
-                }
-                case 10: {
-                    auto* fn = pick_where_int();
-                    Sequence<int>* res = seq->where(fn);
-                    if (res != seq) { delete seq; seq = res; }
-                    print_int_seq(seq, "После where");
-                    break;
-                }
-                case 11: {
-                    std::cout << "  Операция reduce:\n"
-                              << "    1. Сумма      (нач=0)\n"
-                              << "    2. Произведение (нач=1)\n"
-                              << "    3. Максимум   (нач=INT_MIN)\n"
-                              << "    4. Минимум    (нач=INT_MAX)\n";
-                    int ch = ask_range("  Выбор: ", 1, 4);
-                    int (*fns[])(const int&, const int&) = {fn_sum, fn_prod, fn_max, fn_min};
-                    int starts[] = {0, 1, INT_MIN, INT_MAX};
-                    const char* names[] = {"Сумма", "Произведение", "Максимум", "Минимум"};
-                    std::cout << "  " << names[ch-1] << " = "
-                              << seq->reduce(fns[ch-1], starts[ch-1]) << "\n";
-                    break;
-                }
-                case 12: {
-                    print_int_seq(seq);
-                    break;
-                }
+    switch (op) {
+        case 1: {
+            int v = read_int("  Значение: ");
+            maybe_add_seq(k, s->append(v), s);
+            break;
+        }
+        case 2: {
+            int v = read_int("  Значение: ");
+            maybe_add_seq(k, s->prepend(v), s);
+            break;
+        }
+        case 3: {
+            int v   = read_int("  Значение: ");
+            int pos = read_int("  Позиция: ");
+            try { maybe_add_seq(k, s->insert_at(v, pos), s); }
+            catch (const std::exception& ex) { std::cout << "  [!] " << ex.what() << "\n"; }
+            break;
+        }
+        case 4: {
+            int i = read_int("  Индекс: ");
+            try { std::cout << "  [" << i << "] = " << s->get(i) << "\n"; }
+            catch (const std::exception& ex) { std::cout << "  [!] " << ex.what() << "\n"; }
+            break;
+        }
+        case 5:
+            try { std::cout << "  first = " << s->get_first() << "\n"; }
+            catch (const std::exception& ex) { std::cout << "  [!] " << ex.what() << "\n"; }
+            break;
+        case 6:
+            try { std::cout << "  last = " << s->get_last() << "\n"; }
+            catch (const std::exception& ex) { std::cout << "  [!] " << ex.what() << "\n"; }
+            break;
+        case 7:
+            std::cout << "  size = " << s->get_size() << "\n";
+            break;
+        case 8: {
+            int from = read_int("  От: ");
+            int to   = read_int("  До: ");
+            try {
+                Sequence<int>* sub = s->get_subsequence(from, to);
+                // get_subsequence creates new object (same-kind)
+                add_seq(k, sub);
             }
+            catch (const std::exception& ex) { std::cout << "  [!] " << ex.what() << "\n"; }
+            break;
         }
-        catch (const std::exception& e) {
-            std::cout << "  [!] " << e.what() << "\n";
-        }
-    }
-
-    delete seq;
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  ШАГ 7: Основной цикл — BitSequence
-//  bit_and/or/xor: результат усекается до min(size_a, size_b),
-//  поэтому показываем оба размера перед операцией
-// ═══════════════════════════════════════════════════════════════════════════
-
-static void run_bits(BitSequence* seq, bool is_mutable) {
-    std::cout << "\n  ✓ Создана " << (is_mutable ? "Mutable" : "Immutable")
-              << " BitSequence.";
-    print_bit_seq(seq);
-
-    for (;;) {
-        std::cout << "\n┌─ BitSequence ["
-                  << (is_mutable ? "Mutable" : "Immutable") << "] ──────────────────\n"
-                  << "│  1. append            9. bit_and (& с другой)\n"
-                  << "│  2. prepend          10. bit_or  (| с другой)\n"
-                  << "│  3. insert_at        11. bit_xor (^ с другой)\n"
-                  << "│  4. get(index)       12. map\n"
-                  << "│  5. get_first/last   13. where\n"
-                  << "│  6. get_size         14. reduce\n"
-                  << "│  7. get_subsequence  15. concat\n"
-                  << "│  8. bit_not (~)      16. Печать\n"
-                  << "│  0. ← Назад\n"
-                  << "└──────────────────────────────────────────\n";
-
-        int cmd = ask_range("  Выбор: ", 0, 16);
-        if (cmd == 0) break;
-
-        try {
-            switch (cmd) {
-                case 1: {
-                    int b = ask_range("  Бит (0/1): ", 0, 1);
-                    Sequence<Bit>* res = seq->append(Bit(b != 0));
-                    if (res != seq) { delete seq; seq = static_cast<BitSequence*>(res); }
-                    print_bit_seq(seq, "После append");
-                    break;
-                }
-                case 2: {
-                    int b = ask_range("  Бит (0/1): ", 0, 1);
-                    Sequence<Bit>* res = seq->prepend(Bit(b != 0));
-                    if (res != seq) { delete seq; seq = static_cast<BitSequence*>(res); }
-                    print_bit_seq(seq, "После prepend");
-                    break;
-                }
-                case 3: {
-                    std::cout << "  Размер: " << seq->get_size()
-                              << ", допустимые индексы: 0.." << seq->get_size() << "\n";
-                    int idx = ask_int("  Индекс: ");
-                    int b   = ask_range("  Бит (0/1): ", 0, 1);
-                    Sequence<Bit>* res = seq->insert_at(Bit(b != 0), idx);
-                    if (res != seq) { delete seq; seq = static_cast<BitSequence*>(res); }
-                    print_bit_seq(seq, "После insert_at");
-                    break;
-                }
-                case 4: {
-                    int idx = ask_int("  Индекс: ");
-                    std::cout << "  [" << idx << "] = "
-                              << (seq->get(idx).get() ? 1 : 0) << "\n";
-                    break;
-                }
-                case 5: {
-                    std::cout << "  get_first() = " << (seq->get_first().get() ? 1 : 0) << "\n"
-                              << "  get_last()  = " << (seq->get_last().get() ? 1 : 0)  << "\n";
-                    break;
-                }
-                case 6: {
-                    std::cout << "  get_size() = " << seq->get_size() << "\n";
-                    break;
-                }
-                case 7: {
-                    std::cout << "  Размер: " << seq->get_size() << "\n";
-                    int s = ask_int("  start: ");
-                    int e = ask_int("  end:   ");
-                    Sequence<Bit>* sub = seq->get_subsequence(s, e);
-                    print_bit_seq(sub, "Подпоследовательность");
-                    delete sub;
-                    break;
-                }
-                case 8: {
-                    BitSequence* res = seq->bit_not();
-                    if (res != seq) { delete seq; seq = res; }
-                    print_bit_seq(seq, "После bit_not");
-                    break;
-                }
-                case 9:
-                case 10:
-                case 11: {
-                    const char* op_names[] = {"", "", "", "", "", "", "", "", "", "bit_and", "bit_or", "bit_xor"};
-                    std::cout << "  Текущий размер: " << seq->get_size()
-                              << "  (результат = min размеров)\n"
-                              << "  Введите 'other':\n";
-                    MutableBitSequence* other = input_bit_seq();
-                    BitSequence* res = nullptr;
-                    if (cmd == 9)  res = seq->bit_and(*other);
-                    if (cmd == 10) res = seq->bit_or(*other);
-                    if (cmd == 11) res = seq->bit_xor(*other);
-                    delete other;
-                    if (res != seq) { delete seq; seq = res; }
-                    print_bit_seq(seq, std::string("После ") + op_names[cmd]);
-                    break;
-                }
-                case 12: {
-                    std::cout << "  Функция map:\n"
-                              << "    1. NOT (инверсия)   2. Идентичность\n";
-                    Bit (*fn)(const Bit&) = (ask_range("  Выбор: ", 1, 2) == 1)
-                                           ? fn_bnot : fn_bid;
-                    Sequence<Bit>* res = seq->map(fn);
-                    if (res != seq) { delete seq; seq = static_cast<BitSequence*>(res); }
-                    print_bit_seq(seq, "После map");
-                    break;
-                }
-                case 13: {
-                    std::cout << "  Условие where:\n"
-                              << "    1. Оставить 1-биты   2. Оставить 0-биты\n";
-                    bool (*fn)(const Bit&) = (ask_range("  Выбор: ", 1, 2) == 1)
-                                            ? fn_is1 : fn_is0;
-                    Sequence<Bit>* res = seq->where(fn);
-                    if (res != seq) { delete seq; seq = static_cast<BitSequence*>(res); }
-                    print_bit_seq(seq, "После where");
-                    break;
-                }
-                case 14: {
-                    std::cout << "  Операция reduce:\n"
-                              << "    1. AND-all (нач=1): все ли биты = 1?\n"
-                              << "    2. OR-all  (нач=0): есть ли хоть одна 1?\n"
-                              << "    3. XOR-all (нач=0): чётность числа единиц\n";
-                    int ch = ask_range("  Выбор: ", 1, 3);
-                    Bit (*fns[])(const Bit&, const Bit&) = {fn_band, fn_bor, fn_bxor};
-                    Bit starts[] = {Bit(true), Bit(false), Bit(false)};
-                    const char* names[] = {"AND-all", "OR-all", "XOR-all"};
-                    Bit result = seq->reduce(fns[ch-1], starts[ch-1]);
-                    std::cout << "  " << names[ch-1] << " = " << (result.get() ? 1 : 0) << "\n";
-                    break;
-                }
-                case 15: {
-                    std::cout << "  Введите 'other' BitSequence:\n";
-                    MutableBitSequence* other = input_bit_seq();
-                    Sequence<Bit>* res = seq->concat(other);
-                    print_bit_seq(res, "Результат concat");
-                    delete res;
-                    delete other;
-                    break;
-                }
-                case 16: {
-                    print_bit_seq(seq);
-                    break;
-                }
-            }
-        }
-        catch (const std::exception& e) {
-            std::cout << "  [!] " << e.what() << "\n";
-        }
-    }
-
-    delete seq;
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  ШАГ 8: Точка входа
-// ═══════════════════════════════════════════════════════════════════════════
-
-int main() {
-    std::cout << "╔════════════════════════════════════════╗\n"
-              << "║          Лабораторная работа 2         ║\n"
-              << "╚════════════════════════════════════════╝\n";
-
-    for (;;) {
-        std::cout << "\n┌─ Главное меню ─────────────────────────\n"
-                  << "│  Тип последовательности:\n"
-                  << "│  1. ArraySequence<int>\n"
-                  << "│  2. ListSequence<int>\n"
-                  << "│  3. BitSequence\n"
-                  << "│  0. Выход\n"
-                  << "└────────────────────────────────────────\n";
-
-        int type = ask_range("  Выбор: ", 0, 3);
-        if (type == 0) break;
-
-        std::cout << "  Изменяемость:\n"
-                  << "    1. Mutable\n"
-                  << "    2. Immutable\n";
-        bool is_mutable = (ask_range("  Выбор: ", 1, 2) == 1);
-
-        try {
-            if (type == 3) {
-                run_bits(init_bit_seq(is_mutable), is_mutable);
+        case 9: {
+            std::cout << "  1. Из реестра  2. Ввести новую временную\n";
+            Sequence<int>* other = nullptr;
+            bool owns = false;
+            if (read_int("  > ") == 1) {
+                other = seq_reg[pick_seq("  Номер второй: ")]->ptr;
             } else {
-                run_int(init_int_seq(type, is_mutable), is_mutable);
+                other = read_int_array();
+                owns  = true;
             }
+            Sequence<int>* res = s->concat(*other);
+            if (owns) delete other;
+            add_seq(k, res); // concat always new object
+            break;
         }
-        catch (const std::exception& e) {
-            std::cout << "  [!] " << e.what() << "\n";
+        case 10:
+            maybe_add_seq(k, s->map(pick_map_func()), s);
+            break;
+        case 11:
+            maybe_add_seq(k, s->where(pick_where_func()), s);
+            break;
+        case 12: {
+            auto  f   = pick_reduce_func();
+            int start = read_int("  Начальное значение: ");
+            std::cout << "  Результат: " << s->reduce(f, start) << "\n";
+            break;
+        }
+        case 13: {
+            // zip returns MutableArraySequence<Pair<int,int>>*
+            // Impossible to store him in the reg: type doesn't match
+            // just print, don't add to reg
+            std::cout << "  Вторая последовательность:\n";
+            Sequence<int>* other = seq_reg[pick_seq()]->ptr;
+            auto* res = zip<int, int>(*s, *other);
+            std::cout << "  zip-результат: [";
+            for (int i = 0; i < res->get_size(); i++) {
+                std::cout << "(" << (*res)[i].first << "," << (*res)[i].second << ")";
+                if (i < res->get_size() - 1) std::cout << ", ";
+            }
+            std::cout << "]\n";
+            std::cout << "  Выполнить unzip? (1 — да): ";
+            if (read_int() == 1) {
+                auto pair = unzip<int, int>(*res);
+                std::cout << "  first:  " << *pair.first << "\n";
+                std::cout << "  second: " << *pair.second << "\n";
+                std::cout << "  Добавить оба в реестр? (1 — да): ";
+                if (read_int() == 1) {
+                    add_seq(SeqKind::MutArray, pair.first);
+                    add_seq(SeqKind::MutArray, pair.second);
+                } else {
+                    delete pair.first;
+                    delete pair.second;
+                }
+            }
+            delete res;
+            break;
+        }
+        case 14: {
+            int split_val = read_int("  Элемент-разделитель: ");
+            auto* res = split<int>(*s, split_val);
+            std::cout << "  Фрагментов: " << res->get_size() << "\n";
+            for (int i = 0; i < res->get_size(); i++) {
+                std::cout << "  [" << (i+1) << "] " << *(*res)[i] << "\n";
+                // фрагменты переходят во владение реестра — не удаляем здесь
+                seq_reg.append(new SeqEntry{SeqKind::MutArray, (*res)[i]});
+                std::cout << "      → добавлен под номером " << seq_reg.get_size() << "\n";
+            }
+    
+            delete res;
+            break;
+        }
+        case 15: {
+            int index = read_int("  Индекс (может быть отрицательным): ");
+            int count = read_int("  Количество удаляемых: ");
+            auto* ins = read_int_array();
+            try {
+                Sequence<int>* res = s->slice(index, count, *ins);
+                delete ins;
+                maybe_add_seq(k, res, s);
+            } catch (const std::exception& ex) {
+                delete ins;
+                std::cout << "  [!] " << ex.what() << "\n";
+            }
+            break;
+        }
+        case 16:
+            std::cout << *s << "\n";
+            break;
+        default:
+            std::cout << "  [!] Неверная операция.\n";
+    }
+}
+
+// ============================================================
+// BitSequence Operations
+// ============================================================
+void cmd_bit_ops(int idx) {
+    BitEntry*    e = bit_reg[idx];
+    BitSequence* b = e->ptr;
+    BitKind      k = e->kind;
+
+    std::cout << "\n  1. bit_and   2. bit_or\n"
+              << "  3. bit_xor   4. bit_not\n"
+              << "  5. get_size  6. get(index)\n"
+              << "  7. append    8. печать\n"
+              << "  9. map       10. where\n";
+    int op = read_int("  > ");
+
+    auto pick_other_bit = [&]() -> BitSequence* {
+        return bit_reg[pick_bit("  Номер второго BitSequence: ")]->ptr;
+    };
+
+    switch (op) {
+        case 1: { auto* r = b->bit_and(*pick_other_bit()); maybe_add_bit(k, r, b); break; }
+        case 2: { auto* r = b->bit_or (*pick_other_bit()); maybe_add_bit(k, r, b); break; }
+        case 3: { auto* r = b->bit_xor(*pick_other_bit()); maybe_add_bit(k, r, b); break; }
+        case 4: { auto* r = b->bit_not(); maybe_add_bit(k, r, b); break; }
+        case 5: std::cout << "  size = " << b->get_size() << "\n"; break;
+        case 6: {
+            int i = read_int("  Индекс: ");
+            try { std::cout << "  [" << i << "] = " << (b->get(i).get() ? "1" : "0") << "\n"; }
+            catch (const std::exception& ex) { std::cout << "  [!] " << ex.what() << "\n"; }
+            break;
+        }
+
+        case 7: {
+            int v = read_int("  Бит (0/1): ");
+            auto* res = static_cast<BitSequence*>(b->append(Bit(v != 0)));
+            maybe_add_bit(k, res, b);
+            break;
+        }
+        case 8: std::cout << *b << "\n"; break;
+        case 9: {
+            // bit map: NOT — единственная унарная трансформация
+            auto* r = static_cast<BitSequence*>(
+                b->map([](const Bit& x) { return ~x; })
+            );
+            maybe_add_bit(k, r, b);
+            break;
+        }
+        case 10: {
+            std::cout << "  1. только 1-биты  2. только 0-биты\n";
+            bool target = (read_int("  > ") == 1);
+            auto* r = static_cast<BitSequence*>(
+                b->where(target ? where_bit_one : where_bit_zero)
+            );
+            maybe_add_bit(k, r, b);
+            break;
+        }
+        default: std::cout << "  [!] Неверная операция.\n";
+    }
+}
+
+// ============================================================
+// delete from reg
+// ============================================================
+template <typename Entry>
+void remove_from(MutableArraySequence<Entry*>& reg, int idx) {
+    delete reg[idx];
+    reg.remove_at(idx);
+    std::cout << "  → Удалено.\n";
+}
+
+// ============================================================
+// main menu
+// ============================================================
+int main() {
+    while (true) {
+        std::cout << "\n===== int-последовательности =====\n";
+        print_seq_registry();
+        std::cout << "===== BitSequence =================\n";
+        print_bit_registry();
+        std::cout << "===================================\n"
+                  << "  0. Выход\n"
+                  << "  1. Создать int-последовательность\n"
+                  << "  2. Создать BitSequence\n"
+                  << "  3. Операции с int-последовательностью\n"
+                  << "  4. Операции с BitSequence\n"
+                  << "  5. Удалить int-последовательность\n"
+                  << "  6. Удалить BitSequence\n";
+
+        switch (read_int("> ")) {
+            case 0:
+                for (int i = 0; i < seq_reg.get_size(); i++) delete seq_reg[i];
+                for (int i = 0; i < bit_reg.get_size(); i++) delete bit_reg[i];
+                return 0;
+            case 1: cmd_create_seq(); break;
+            case 2: cmd_create_bit(); break;
+            case 3:
+                if (seq_reg.get_size() == 0) { std::cout << "  (реестр пуст)\n"; break; }
+                cmd_seq_ops(pick_seq("  Выберите последовательность: "));
+                break;
+            case 4:
+                if (bit_reg.get_size() == 0) { std::cout << "  (реестр пуст)\n"; break; }
+                cmd_bit_ops(pick_bit("  Выберите BitSequence: "));
+                break;
+            case 5:
+                if (seq_reg.get_size() == 0) { std::cout << "  (реестр пуст)\n"; break; }
+                remove_from(seq_reg, pick_seq("  Номер для удаления: "));
+                break;
+            case 6:
+                if (bit_reg.get_size() == 0) { std::cout << "  (реестр пуст)\n"; break; }
+                remove_from(bit_reg, pick_bit("  Номер для удаления: "));
+                break;
+            default:
+                std::cout << "  [!] Неверная команда.\n";
         }
     }
-
-    std::cout << "\n  До свидания!\n";
-    return 0;
 }

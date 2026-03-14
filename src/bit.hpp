@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ostream>
 class Bit {
 public:
     Bit() : value{false} {}
@@ -52,3 +53,8 @@ public:
 private:
     bool value;
 };
+
+// tells to linker not to fail, when see several << in different .cpp
+inline std::ostream& operator<<(std::ostream& os, const Bit &bit) {
+    return os << (bit.get() ? "1" : "0");
+}

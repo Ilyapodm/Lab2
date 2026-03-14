@@ -2,7 +2,8 @@
 
 #include "array_sequence.hpp"
 #include "bit.hpp"
-
+//BUG Последовательность Битов не готова
+//TODO 
 // abstract class for mutable/immutable bit sequence
 class BitSequence : public ArraySequence<Bit> {
 public:

@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "list_sequence.hpp"
 #include "array_sequence.hpp"  // for some tests 
-
+//BUG не написано slice
 /*******************************************************************
  * Mutable
  *******************************************************************/
@@ -151,7 +151,7 @@ TEST(ListSequence_Concat, ResultIsNew_OriginalUnchanged) {
     int d1[] = {1, 2}, d2[] = {3, 4};
     MutableListSequence<int> a(d1, 2);
     MutableListSequence<int> b(d2, 2);
-    Sequence<int>* res = a.concat(&b);
+    Sequence<int>* res = a.concat(b);
     EXPECT_NE(res, &a);
     EXPECT_EQ(a.get_size(), 2);
     EXPECT_EQ(res->get_size(), 4);
@@ -166,7 +166,7 @@ TEST(ListSequence_Concat, CrossType_ListWithArray) {
     int d2[] = {3, 4};
     MutableListSequence<int> list(d1, 2);
     MutableArraySequence<int> arr(d2, 2);
-    Sequence<int>* res = list.concat(&arr);
+    Sequence<int>* res = list.concat(arr);
     EXPECT_EQ(res->get_size(), 4);
     EXPECT_EQ(res->get(2), 3);
     delete res;

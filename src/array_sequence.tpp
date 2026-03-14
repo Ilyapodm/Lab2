@@ -131,11 +131,11 @@ Sequence<T>* ArraySequence<T>::insert_at(const T &item, int index) {
 }
 
 template <typename T>
-Sequence<T>* ArraySequence<T>::concat(Sequence<T> *other) const {
+Sequence<T>* ArraySequence<T>::concat(const Sequence<T> &other) const {
     ArraySequence<T> *result = this->empty_sequence();
 
     try {
-        int total_size = this->get_size() + other->get_size();
+        int total_size = this->get_size() + other.get_size();
         result->array->resize(total_size);  // resize all needed space at one time
 
         for (int i = 0; i < this->get_size(); i++) 
@@ -143,7 +143,7 @@ Sequence<T>* ArraySequence<T>::concat(Sequence<T> *other) const {
             result->array->set(i, array->get(i));
         
         for (int i = 0; i < other->get_size(); i++) 
-            result->array->set(this->get_size() + i, other->get(i));  // have already placed get_size - 1 spaces
+            result->array->set(this->get_size() + i, other.get(i));  // have already placed get_size - 1 spaces
         
     } catch (...) {
         delete result;
@@ -212,7 +212,7 @@ Sequence<T>* ArraySequence<T>::slice(int index, int count, const Sequence<T> &se
 
     Sequence<T> *inst = this->instance();
 
-    int new_size = index + seq->get_size() + (get_size() - end);
+    int new_size = index + seq.get_size() + (get_size() - end);
 
     DynamicArray<T> *new_array = new DynamicArray<T>(new_size);
 

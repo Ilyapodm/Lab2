@@ -329,7 +329,7 @@ TEST(LinkedList_Concat, NullptrOther_Throws) {
 /*******************************************************************
  * filter
  *******************************************************************/
-
+//TODO добавить transform 
 TEST(LinkedList_Filter, KeepAll) {
     int data[] = {2, 4, 6};
     LinkedList<int> list(data, 3);

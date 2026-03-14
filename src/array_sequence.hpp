@@ -32,7 +32,7 @@ public:
     Sequence<T>* append(const T &item) override;
     Sequence<T>* prepend(const T &item) override;
     Sequence<T>* insert_at(const T &item, int index) override;
-    Sequence <T>* concat(Sequence<T> *other) const override;
+    Sequence <T>* concat(const Sequence<T> &other) const override;
 
     Sequence<T>* map(T (*mapper)(const T &element)) override;
     Sequence<T>* where(bool (*predicate)(const T &element)) override;
@@ -76,6 +76,17 @@ public:
         *this->array = *other.array; // DynamicArray::operator=
         return *this;
     }
+    // for menu main array
+    void remove_at(int index) {
+        if (index < 0 || index >= this->get_size())
+            throw std::out_of_range("remove_at: index out of range");
+
+        for (int i = index; i < this->get_size() - 1; i++)
+            this->array->set(i, this->array->get(i + 1));
+
+        this->array->resize(this->get_size() - 1);
+    }
+
 protected:
     ArraySequence<T>* instance() override {
         return this;  // return actually the object
