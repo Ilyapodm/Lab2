@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "list_sequence.hpp"
 #include "array_sequence.hpp"  // for some tests 
-//BUG не написано slice
+//BUG не написано slice, set, remove_at
 /*******************************************************************
  * Mutable
  *******************************************************************/
