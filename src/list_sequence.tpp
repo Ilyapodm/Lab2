@@ -54,34 +54,6 @@ int ListSequence<T>::get_size() const {
     return list->get_length();
 }
 
-// type of sublist (mutable or immutable) is the type of "this"
-template <typename T>
-Sequence<T>* ListSequence<T>::get_subsequence(int start_index, int end_index) const {
-    if (start_index < 0 || end_index < start_index || end_index >= this->get_size()) 
-        throw std::out_of_range("get_subsequence: index out of range");
-
-    ListSequence<T> *result = this->empty_sequence();
-
-    // HOW IS IT WORKING:
-    // result's already had a pointer to "list" (empty). if we use '=' 
-    // without deletion empty "list" will be lost (memory leak).
-    // HOW COULD (or couldn't) IT WORK 
-    // one way: use operator '=' for LinkedList. But then temp list 
-    // from get_sublist will be lost (memory leak)
-    // another way: do not use get_sublist(), and just work with 
-    // result's empty "list" by appending the elements (just like in array sequence) 
-    try{
-        delete result->list; 
-        result->list = this->list->get_sublist(start_index, end_index);  // working with pointers, not lists
-    } catch(...) {
-        result->list = nullptr;  // don't have to delete it again with "delete result"
-        delete result;
-        throw;
-    }
-
-    return result;
-}
-
 /*******************************************************************
  * operations
  *******************************************************************/
@@ -178,6 +150,34 @@ Sequence<T>* ListSequence<T>::remove_at(int index) {
     return inst;
 }
 
+// type of sublist (mutable or immutable) is the type of "this"
+template <typename T>
+Sequence<T>* ListSequence<T>::get_subsequence(int start_index, int end_index) const {
+    if (start_index < 0 || end_index < start_index || end_index >= this->get_size()) 
+        throw std::out_of_range("get_subsequence: index out of range");
+
+    ListSequence<T> *result = this->empty_sequence();
+
+    // HOW IS IT WORKING:
+    // result's already had a pointer to "list" (empty). if we use '=' 
+    // without deletion empty "list" will be lost (memory leak).
+    // HOW COULD (or couldn't) IT WORK 
+    // one way: use operator '=' for LinkedList. But then temp list 
+    // from get_sublist will be lost (memory leak)
+    // another way: do not use get_sublist(), and just work with 
+    // result's empty "list" by appending the elements (just like in array sequence) 
+    try{
+        delete result->list; 
+        result->list = this->list->get_sublist(start_index, end_index);  // working with pointers, not lists
+    } catch(...) {
+        result->list = nullptr;  // don't have to delete it again with "delete result"
+        delete result;
+        throw;
+    }
+
+    return result;
+}
+
 template <typename T>
 Sequence<T>* ListSequence<T>::concat(const Sequence<T> &other) const {
     ListSequence<T> *result = this->empty_sequence();
@@ -212,8 +212,14 @@ Sequence<T>* ListSequence<T>::concat(const Sequence<T> &other) const {
 template <typename T>
 Sequence<T>* ListSequence<T>::map(T (*mapper)(const T &element)) {
     ListSequence<T> *inst = this->instance();
-
-    inst->list->transform(mapper);
+    
+    try {
+        inst->list->transform(mapper);
+    } catch (...) {
+        if (inst != this)
+            delete inst;
+        throw;
+    }  
 
     return inst;
 }
@@ -225,7 +231,13 @@ Sequence<T>* ListSequence<T>::where(bool (*predicate)(const T &element)) {
     // so "where" delegates it to "filter" in "linked_list", to do it quick 
     ListSequence<T> *inst = this->instance();
     
-    inst->list->filter(predicate);
+    try {
+        inst->list->filter(predicate);
+    } catch (...) {
+        if (inst != this)
+            delete inst;
+        throw;
+    }  
 
     return inst;
 }
@@ -248,6 +260,8 @@ T ListSequence<T>::reduce(T (*reduce_func)(const T &first_element, const T &seco
 template <typename T>
 Sequence<T>* ListSequence<T>::slice(int index, int count, const Sequence<T> &seq) {
     // if "count" go out of the edge, silently but it till this edge
+    if (count < 0)
+        throw::std::invalid_argument("slice: count cannot be negetive");
     if (index < 0)
         index = get_size() + index;
     if (index < 0 || index >= get_size()) 

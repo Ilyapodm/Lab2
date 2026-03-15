@@ -18,15 +18,15 @@ public:
     Option<T> try_get_last() const;
     Option<T> try_get(int index) const;
 
-    virtual Sequence<T>* get_subsequence(int start_index, int end_index) const = 0;
-
     // operations
     virtual Sequence<T>* append(const T &item) = 0;
     virtual Sequence<T>* prepend(const T &item) = 0;
     virtual Sequence<T>* insert_at(const T &item, int index) = 0;
     virtual Sequence<T>* set(const T &item, int index) = 0;
-
+    
     virtual Sequence<T>* remove_at(int index) = 0;
+
+    virtual Sequence<T>* get_subsequence(int start_index, int end_index) const = 0;
 
     virtual Sequence<T>* concat(const Sequence<T> &list) const = 0;
 

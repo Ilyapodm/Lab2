@@ -157,35 +157,6 @@ int LinkedList<T>::get_length() const {
     return length;
 }
 
-template <typename T>
-LinkedList<T>* LinkedList<T>::get_sublist(int start_index, int end_index) const {
-    if (head == nullptr)
-        throw std::out_of_range("get_sublist: The list is empty");
-    if (start_index < 0 || end_index >= length)
-        throw std::out_of_range("get_sublist: Index out of range");
-    if (start_index > end_index)
-        throw std::out_of_range("get_sublist: Start index can't be greater than end index");
-
-    LinkedList<T>* result = new LinkedList<T>();
-
-    Node* current_node = head;
-    for (int i = 0; i < start_index; i++)
-        current_node = current_node->next;
-
-    // append can fail on the 2, 3... iteration, list will be broken
-    try {
-        for (int i = start_index; i <= end_index; i++) {
-            result->append(current_node->data);
-            current_node = current_node->next;
-        }
-    } catch (...) {
-        delete result;
-        throw;
-    }
-
-    return result;
-}
-
 /*******************************************************************
  * operations
  *******************************************************************/
@@ -300,6 +271,35 @@ T LinkedList<T>::remove_at(int index) {
     length--;
     delete node_to_delete;
     return value;
+}
+
+template <typename T>
+LinkedList<T>* LinkedList<T>::get_sublist(int start_index, int end_index) const {
+    if (head == nullptr)
+        throw std::out_of_range("get_sublist: The list is empty");
+    if (start_index < 0 || end_index >= length)
+        throw std::out_of_range("get_sublist: Index out of range");
+    if (start_index > end_index)
+        throw std::out_of_range("get_sublist: Start index can't be greater than end index");
+
+    LinkedList<T>* result = new LinkedList<T>();
+
+    Node* current_node = head;
+    for (int i = 0; i < start_index; i++)
+        current_node = current_node->next;
+
+    // append can fail on the 2, 3... iteration, list will be broken
+    try {
+        for (int i = start_index; i <= end_index; i++) {
+            result->append(current_node->data);
+            current_node = current_node->next;
+        }
+    } catch (...) {
+        delete result;
+        throw;
+    }
+
+    return result;
 }
 
 template <typename T>

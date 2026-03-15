@@ -6,6 +6,7 @@
 template <typename T>
 class ArraySequence : public Sequence<T> {
 public:
+    // constructors
     ArraySequence();
     ArraySequence(T *items, int size);  // copy from given array
     ArraySequence(const DynamicArray<T> &array);
@@ -14,21 +15,22 @@ public:
 
     // do not write Sequence<T>* operator=(const ArraySequence<T> &other); because for Mutable 
     // and immutable there will be different args - "перегрузка", not redefinition.
-
+    
+    // methods for Mutable/Immutable
     virtual ArraySequence<T>* instance() = 0;  // returns who will be changed (copy or actually the object)
 
     // need it because ArraySequence class is abstract (can't create objects), and in  
     // the methods we don't know mutable or immutable objects we are working with
     virtual ArraySequence<T>* empty_sequence() const = 0;  // returns an empty Mutable or Immutable (array sequence)
 
+    // getters
     const T& get_first() const override;  
     const T& get_last() const override;
     const T& get(int index) const override;
 
     int get_size() const override;
     
-    Sequence<T>* get_subsequence(int start_index, int end_index) const override;
-
+    // operations
     Sequence<T>* append(const T &item) override;
     Sequence<T>* prepend(const T &item) override;
     Sequence<T>* insert_at(const T &item, int index) override;
@@ -36,8 +38,11 @@ public:
 
     Sequence<T>* remove_at(int index) override;
 
+    Sequence<T>* get_subsequence(int start_index, int end_index) const override;
+
     Sequence <T>* concat(const Sequence<T> &other) const override;
 
+    // map, where, reduce
     Sequence<T>* map(T (*mapper)(const T &element)) override;
     Sequence<T>* where(bool (*predicate)(const T &element)) override;
     T reduce(T (*reduce_func)(const T &first_element, const T &second_element), const T &start_element) override;

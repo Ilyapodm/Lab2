@@ -6,6 +6,10 @@
 #include "sequence.hpp"
 #include <stdexcept>
 
+/*******************************************************************
+ * constructors
+ *******************************************************************/
+
 template <typename T>
 ArraySequence<T>::ArraySequence() {
     array = new DynamicArray<T>();
@@ -25,6 +29,11 @@ template <typename T>
 ArraySequence<T>::ArraySequence(const ArraySequence<T> &other) {
     array = new DynamicArray<T>(*other.array);
 }
+
+/*******************************************************************
+ * getters
+ *******************************************************************/
+
 
 template <typename T>
 const T& ArraySequence<T>::get_first() const {
@@ -46,30 +55,9 @@ int ArraySequence<T>::get_size() const {
     return array->get_size();
 }
 
-template <typename T>
-Sequence<T>* ArraySequence<T>::get_subsequence(int start_index, int end_index) const {
-    if (start_index < 0 || end_index >= array->get_size() || start_index > end_index)  // cover size = 0
-        throw std::out_of_range("get_subsequence: index out of range");
-
-    // need this method because we don't know what (mutable/immutable) we are working with
-    ArraySequence<T> *result = this->empty_sequence();
-
-    try {
-        int total_size = end_index - start_index + 1;  
-
-        result->array->resize(total_size);  // resize all needed space one time
-
-        for (int i = start_index; i <= end_index; i++){
-            // do not use append because it can create another copy for immutable
-            result->array->set(i - start_index, array->get(i));
-        }
-    } catch (...) {
-        delete result;
-        throw;
-    }
-
-    return result;
-}
+/*******************************************************************
+ * operations
+ *******************************************************************/
 
 template <typename T>
 Sequence<T>* ArraySequence<T>::append(const T &item) {
@@ -168,6 +156,31 @@ Sequence<T>* ArraySequence<T>::remove_at(int index) {
 }
 
 template <typename T>
+Sequence<T>* ArraySequence<T>::get_subsequence(int start_index, int end_index) const {
+    if (start_index < 0 || end_index >= array->get_size() || start_index > end_index)  // cover size = 0
+        throw std::out_of_range("get_subsequence: index out of range");
+
+    // need this method because we don't know what (mutable/immutable) we are working with
+    ArraySequence<T> *result = this->empty_sequence();
+
+    try {
+        int total_size = end_index - start_index + 1;  
+
+        result->array->resize(total_size);  // resize all needed space one time
+
+        for (int i = start_index; i <= end_index; i++){
+            // do not use append because it can create another copy for immutable
+            result->array->set(i - start_index, array->get(i));
+        }
+    } catch (...) {
+        delete result;
+        throw;
+    }
+
+    return result;
+}
+
+template <typename T>
 Sequence<T>* ArraySequence<T>::concat(const Sequence<T> &other) const {
     ArraySequence<T> *result = this->empty_sequence();
 
@@ -198,9 +211,16 @@ template <typename T>
 Sequence<T>* ArraySequence<T>::map(T (*mapper)(const T &element)) {
     ArraySequence<T> *inst = this->instance();
 
-    for (int i = 0; i < inst->get_size(); i++) {
-        inst->array->set(i, mapper(inst->array->get(i)));
+    try {
+        for (int i = 0; i < inst->get_size(); i++) {
+            inst->array->set(i, mapper(inst->array->get(i)));
+        }
+    } catch (...) {
+        if (this != inst) 
+            delete inst;
+        throw;
     }
+    
 
     return inst;
 }
@@ -209,14 +229,20 @@ template <typename T>
 Sequence<T>* ArraySequence<T>::where(bool (*predicate)(const T &element)) {
     ArraySequence<T> *inst = this->instance();
 
-    int src = 0, dst = 0;
-    for (; src < inst->get_size(); src++) {
-        if (predicate(inst->get(src))) {
-            inst->array->set(dst, inst->get(src));
-            dst++;
+    try {
+        int src = 0, dst = 0;
+        for (; src < inst->get_size(); src++) {
+            if (predicate(inst->get(src))) {
+                inst->array->set(dst, inst->get(src));
+                dst++;
+            }
         }
+        inst->array->resize(dst);  // size can be changed
+    }catch (...) {
+        if (this != inst) 
+            delete inst;
+        throw;
     }
-    inst->array->resize(dst);  // size can be changed
 
     return inst;
 }
@@ -235,6 +261,8 @@ T ArraySequence<T>::reduce(T (*reduce_func)(const T &first_element, const T &sec
 template <typename T>
 Sequence<T>* ArraySequence<T>::slice(int index, int count, const Sequence<T> &seq) {
     // if "count" go out of the edge, silently but it till this edge
+    if (count < 0)
+        throw::std::invalid_argument("slice: count cannot be negetive");
     if (index < 0)
         index = get_size() + index;
     if (index < 0 || index >= get_size()) 
@@ -287,8 +315,8 @@ Sequence<T>* ArraySequence<T>::slice(int index, int count, const Sequence<T> &se
 
 template <typename T>
 IEnumerator<T>* ArraySequence<T>::get_enumerator() const {
-        return new ArrayEnumerator(this);
-    }
+    return new ArrayEnumerator(this);
+}
 
 template <typename T>
 bool ArraySequence<T>::ArrayEnumerator::move_next() {

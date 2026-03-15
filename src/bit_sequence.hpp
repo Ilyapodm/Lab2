@@ -1,105 +1,73 @@
 #pragma once
 
-#include "array_sequence.hpp"
 #include "bit.hpp"
-//BUG Последовательность Битов не готова
-//TODO 
-// abstract class for mutable/immutable bit sequence
-class BitSequence : public ArraySequence<Bit> {
+#include "dynamic_array.hpp"
+#include "sequence.hpp"
+
+//TODO исправить main с битом
+//TODO написать тесты
+class BitSequence : public Sequence<Bit> {
 public:
-    BitSequence() : ArraySequence<Bit>() {}
-    BitSequence(bool *items, int size) : ArraySequence<Bit>(){
-        this->array->resize(size);
-        for (int i = 0; i < size; i++)
-            this->array->set(i, Bit(items[i]));
-    }
-    BitSequence(const BitSequence &other) : ArraySequence<Bit>(other) {}
+    // constructors
+    BitSequence();
+    BitSequence(bool *items, int size);
+    BitSequence(const BitSequence &other);
+    ~BitSequence() {}   
 
-    // redefinition with more clear return type
-    virtual BitSequence* instance() = 0;              //  pure virtual
-    virtual BitSequence* empty_sequence() const = 0;
+    // getters
+    const Bit& get_first() const override;
+    const Bit& get_last() const override;
+    const Bit& get(int index) const override;
 
+    int get_size() const override;
+
+    // operations
+    // always creates new bitsequence, but can't put const here, because sequence doesn't have const
+    BitSequence* append(const Bit &item) override;
+    BitSequence* prepend(const Bit &item) override;
+    BitSequence* insert_at(const Bit &item, int index) override;
+    BitSequence* set(const Bit &item, int index) override;
+
+    BitSequence* remove_at(int index) override;
+
+    BitSequence* get_subsequence(int start_index, int end_index) const override;
+
+    BitSequence* concat(const Sequence<Bit> &other) const override;
+
+    // bit operations
     // 1. the length of result bit sequence is the minimum of "this" and "other" lengths for all operations 
     // we can't write "operator&", because it means, that we return Bit&, but if we use instance()(Mutable/Immutable), 
     // we can get clone (new object in the heap) in the method, so need to use ptr
     // 2. could use enumerate, but it's not so quick (new, delete...)
     // 3. don't use try-catch, because set can't throw, because = for "Bit" do not work with memory
-    BitSequence* bit_and(const BitSequence &other) {
-        int result_size = (this->get_size() > other.get_size()) ? other.get_size() : this->get_size();
 
-        BitSequence* inst = this->instance();
+    BitSequence* bit_and(const BitSequence &other) const;
+    BitSequence* bit_or(const BitSequence &other) const;
+    BitSequence* bit_xor(const BitSequence &other) const;
+    BitSequence* bit_not() const;
 
-        for (int i = 0; i < result_size; i++) 
-            inst->array->set(i, inst->get(i) & other.get(i));
+    // map, where, reduce
+    BitSequence*  map(Bit (*mapper)(const Bit& element)) override;
+    BitSequence*  where(bool (*predicate)(const Bit& element)) override;
+    Bit reduce(Bit (*reduce_func)(const Bit& first_element, const Bit& second_element), const Bit& start_element) override;
+    BitSequence*  slice(int index, int count, const Sequence<Bit> &seq) override;
 
-        inst->array->resize(result_size);  // change size (minimum of "this" and "other")
-        return inst;
-    }
+    // nested class enumerator
+    class BitEnumerator : public IEnumerator<Bit> {
+    public:
+        BitEnumerator(const BitSequence *bit_sequence) : bit_sequence{bit_sequence}, index{-1} {}
 
-    BitSequence* bit_or(const BitSequence &other) {
-        int result_size = (this->get_size() > other.get_size()) ? other.get_size() : this->get_size();
+        bool move_next() override;  // move to next element
+        const Bit& get_current() const override;  // get current item
+        void reset() override;  // move to the beginning
 
-        BitSequence* inst = this->instance();
+    private:
+        int index;
+        const BitSequence *bit_sequence;
+    };
 
-        
-        for (int i = 0; i < result_size; i++) 
-            inst->array->set(i, inst->get(i) | other.get(i));
+    IEnumerator<Bit>* get_enumerator() const override;
 
-        inst->array->resize(result_size);  // change size (minimum of "this" and "other")
-        return inst;
-    }
-
-    BitSequence* bit_xor(const BitSequence &other) {
-        int result_size = (this->get_size() > other.get_size()) ? other.get_size() : this->get_size();
-
-        BitSequence* inst = this->instance();
-
-        for (int i = 0; i < result_size; i++) 
-            inst->array->set(i, inst->get(i) ^ other.get(i));
-
-        inst->array->resize(result_size);  // change size (minimum of "this" and "other")
-        return inst;
-    }
-
-    BitSequence* bit_not() {
-        BitSequence* inst = this->instance();
-
-        for (int i = 0; i < inst->get_size(); i++) 
-            inst->array->set(i, ~inst->get(i));
-
-        return inst;
-    }
-};
-
-// MutableArraySequence can use Sequence's interface, so we use it
-class MutableBitSequence : public BitSequence {
-public:
-    MutableBitSequence() : BitSequence() {}
-    MutableBitSequence(bool* items, int size) : BitSequence(items, size) {}; 
-    MutableBitSequence(const BitSequence &other) : BitSequence(other) {}
-
-protected:
-    BitSequence* instance() override {
-        return this;
-    } 
-
-    BitSequence* empty_sequence() const override {
-        return new MutableBitSequence();
-    }
-};
-
-class ImmutableBitSequence : public BitSequence {
-public:
-    ImmutableBitSequence() : BitSequence() {}
-    ImmutableBitSequence(bool* items, int size) : BitSequence(items, size) {}
-    ImmutableBitSequence(const BitSequence &other) : BitSequence(other) {}
-
-protected:
-    BitSequence* instance() override {
-        return new ImmutableBitSequence(*this);
-    } 
-
-    BitSequence* empty_sequence() const override {
-        return new ImmutableBitSequence();
-    }
+private:
+    DynamicArray<Bit> data;
 };

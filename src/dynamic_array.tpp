@@ -3,6 +3,10 @@
 #include "dynamic_array.hpp"
 #include <stdexcept>
 
+/*******************************************************************
+ * constructors
+ *******************************************************************/
+
 template <typename T> 
 DynamicArray<T>::DynamicArray() : size{0}, capacity{0} {
     data = nullptr;
@@ -85,6 +89,10 @@ DynamicArray<T>& DynamicArray<T>::operator=(const DynamicArray<T> &other) {
     return *this;
 }
 
+/*******************************************************************
+ * getters
+ *******************************************************************/
+
 template <typename T>
 const T& DynamicArray<T>::get(int index) const {
     if (index >= size || index < 0) {
@@ -104,6 +112,10 @@ template <typename T>
 int DynamicArray<T>::get_capacity() const{
     return capacity;
 }
+
+/*******************************************************************
+ * operations
+ *******************************************************************/
 
 template <typename T>
 void DynamicArray<T>::set(int index, const T& value) {

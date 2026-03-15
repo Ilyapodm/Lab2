@@ -25,6 +25,7 @@ target_include_directories(seq_lib INTERFACE
 # ─── Исполняемый файл (интерактивная программа / UI) ──────────────────────────
 add_executable(lab2
     main.cpp
+    bit_sequence.cpp
     # Если разобьёшь main на несколько .cpp файлов — добавляй их сюда:
     # ui.cpp
     # menu.cpp

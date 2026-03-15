@@ -28,8 +28,6 @@ public:
 
     int get_size() const override;
 
-    Sequence<T>* get_subsequence(int start_index, int end_index) const override;
-
     // operations
     Sequence<T>* append(const T &item) override;
     Sequence<T>* prepend(const T &item) override;
@@ -38,6 +36,8 @@ public:
 
     Sequence<T>* remove_at(int index) override;
 
+    Sequence<T>* get_subsequence(int start_index, int end_index) const override;
+    
     Sequence<T>* concat(const Sequence<T> &other) const override;
 
     // map, where, reduce

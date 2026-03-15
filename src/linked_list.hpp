@@ -25,15 +25,16 @@ public:
     const T& get_first() const;
     const T& get_last() const ;
     const T& get(int index) const;
-
-    LinkedList<T>* get_sublist(int start_index, int end_index) const;
     
     // operations
     void append(const T &item); 
     void prepend(const T &item);
     void insert_at(const T &item, int index);
     void set(int index, const T &item);
+    
     T remove_at(int index);
+
+    LinkedList<T>* get_sublist(int start_index, int end_index) const;
 
     LinkedList<T>* concat(const LinkedList<T> *other) const; 
 
