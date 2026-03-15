@@ -7,13 +7,10 @@
 #include "sequence.hpp"
 #include "utils.hpp"   // zip, unzip, split — free functions
 
-//BUG Последовательность Битов не готова
-
 // ============================================================
 // Tags of different types of sequences
 // ============================================================
 enum class SeqKind  { MutArray, ImmArray, MutList, ImmList };
-enum class BitKind  { MutBit, ImmBit };
 
 const char* seq_kind_name(SeqKind k) {
     switch (k) {
@@ -24,11 +21,10 @@ const char* seq_kind_name(SeqKind k) {
     }
     return "?";
 }
-const char* bit_kind_name(BitKind k) {
-    return k == BitKind::MutBit ? "Mutable BitSequence" : "Immutable BitSequence";
+
+bool is_mutable(SeqKind k) { 
+    return k == SeqKind::MutArray || k == SeqKind::MutList; 
 }
-bool is_mutable(SeqKind k) { return k == SeqKind::MutArray || k == SeqKind::MutList; }
-bool is_mutable(BitKind k) { return k == BitKind::MutBit; }
 
 // ============================================================
 // Regs
@@ -40,11 +36,10 @@ struct SeqEntry {
 };
 
 struct BitEntry {
-    BitKind      kind;
+    // no kind anymore. only immutable
     BitSequence *ptr;
     ~BitEntry() { delete ptr; }
 };
-
 
 // sequence<Bit> != sequence<int>, so need 2 independed regs
 MutableArraySequence<SeqEntry*> seq_reg;   // int-sequences
@@ -89,8 +84,7 @@ void print_seq_registry() {
 
 void print_bit_registry() {
     for (int i = 0; i < bit_reg.get_size(); i++)
-        std::cout << "  " << (i+1) << ". " << *bit_reg[i]->ptr
-                  << "  — " << bit_kind_name(bit_reg[i]->kind) << "\n";
+        std::cout << "  " << (i+1) << ". " << *bit_reg[i]->ptr << "\n";
 }
 
 // Выбор индекса из реестра int-последовательностей (1-based → 0-based)
@@ -119,8 +113,8 @@ void add_seq(SeqKind kind, Sequence<int>* ptr) {
               << seq_reg.get_size() << ".\n";
 }
 
-void add_bit(BitKind kind, BitSequence* ptr) {
-    bit_reg.append(new BitEntry{kind, ptr});
+void add_bit(BitSequence *ptr) {
+    bit_reg.append(new BitEntry{ptr});
     std::cout << "  → Добавлено в реестр BitSequence под номером "
               << bit_reg.get_size() << ".\n";
 }
@@ -132,9 +126,9 @@ void maybe_add_seq(SeqKind kind, Sequence<int>* result, Sequence<int>* original)
     else { std::cout << "  → Объект изменён на месте.\n"; print_seq_registry(); }
 }
 
-void maybe_add_bit(BitKind kind, BitSequence* result, BitSequence* original) {
-    if (result != original) add_bit(kind, result);
-    else { std::cout << "  → Объект изменён на месте.\n"; print_bit_registry(); }
+// always add new bit_sequence
+void maybe_add_bit(BitSequence* result) {
+    add_bit(result);
 }
 
 // ============================================================
@@ -220,17 +214,13 @@ void cmd_create_seq() {
 }
 
 void cmd_create_bit() {
-    std::cout << "  1. Mutable BitSequence\n"
-              << "  2. Immutable BitSequence\n";
-    int choice = read_int("  > ");
     int n = read_int("  Количество бит: ");
     bool* bits = new bool[n];
     for (int i = 0; i < n; i++) {
         std::cout << "  бит[" << i << "] (0/1): ";
         bits[i] = (read_int() != 0);
     }
-    if (choice == 1) add_bit(BitKind::MutBit, new MutableBitSequence(bits, n));
-    else             add_bit(BitKind::ImmBit, new ImmutableBitSequence(bits, n));
+    add_bit(new BitSequence(bits, n));
     delete[] bits;
 }
 
@@ -409,59 +399,122 @@ void cmd_seq_ops(int idx) {
 // BitSequence Operations
 // ============================================================
 void cmd_bit_ops(int idx) {
-    BitEntry*    e = bit_reg[idx];
-    BitSequence* b = e->ptr;
-    BitKind      k = e->kind;
+    BitSequence* b = bit_reg[idx]->ptr;
 
-    std::cout << "\n  1. bit_and   2. bit_or\n"
-              << "  3. bit_xor   4. bit_not\n"
-              << "  5. get_size  6. get(index)\n"
-              << "  7. append    8. печать\n"
-              << "  9. map       10. where\n";
-    int op = read_int("  > ");
+    std::cout << "\n  — Базовые операции —\n"
+              << "  1. append      2. prepend\n"
+              << "  3. insert_at   4. set\n"
+              << "  5. remove_at   6. get\n"
+              << "  7. get_first   8. get_last\n"
+              << "  9. get_size   10. get_subsequence\n"
+              << " 11. concat     12. slice\n"
+              << "  — map / where / reduce —\n"
+              << " 13. map        14. where\n"
+              << " 15. reduce\n"
+              << "  — Битовые операции —\n"
+              << " 16. bit_and    17. bit_or\n"
+              << " 18. bit_xor    19. bit_not\n"
+              << " 20. печать\n";
+    int op = read_int(" > ");
 
     auto pick_other_bit = [&]() -> BitSequence* {
-        return bit_reg[pick_bit("  Номер второго BitSequence: ")]->ptr;
+        return bit_reg[pick_bit(" Номер второго BitSequence: ")]->ptr;
     };
 
     switch (op) {
-        case 1: { auto* r = b->bit_and(*pick_other_bit()); maybe_add_bit(k, r, b); break; }
-        case 2: { auto* r = b->bit_or (*pick_other_bit()); maybe_add_bit(k, r, b); break; }
-        case 3: { auto* r = b->bit_xor(*pick_other_bit()); maybe_add_bit(k, r, b); break; }
-        case 4: { auto* r = b->bit_not(); maybe_add_bit(k, r, b); break; }
-        case 5: std::cout << "  size = " << b->get_size() << "\n"; break;
-        case 6: {
-            int i = read_int("  Индекс: ");
-            try { std::cout << "  [" << i << "] = " << (b->get(i).get() ? "1" : "0") << "\n"; }
-            catch (const std::exception& ex) { std::cout << "  [!] " << ex.what() << "\n"; }
-            break;
+    case 1: {
+        int v = read_int(" Бит (0/1): ");
+        maybe_add_bit(b->append(Bit(v != 0)));
+        break;
+    }
+    case 2: {
+        int v = read_int(" Бит (0/1): ");
+        maybe_add_bit(b->prepend(Bit(v != 0)));
+        break;
+    }
+    case 3: {
+        int v   = read_int(" Бит (0/1): ");
+        int pos = read_int(" Позиция: ");
+        try { maybe_add_bit(b->insert_at(Bit(v != 0), pos)); }
+        catch (const std::exception& ex) { std::cout << " [!] " << ex.what() << "\n"; }
+        break;
+    }
+    case 4: {
+        int v   = read_int(" Бит (0/1): ");
+        int pos = read_int(" Позиция: ");
+        try { maybe_add_bit(b->set(Bit(v != 0), pos)); }
+        catch (const std::exception& ex) { std::cout << " [!] " << ex.what() << "\n"; }
+        break;
+    }
+    case 5: {
+        int pos = read_int(" Позиция: ");
+        try { maybe_add_bit(b->remove_at(pos)); }
+        catch (const std::exception& ex) { std::cout << " [!] " << ex.what() << "\n"; }
+        break;
+    }
+    case 6: {
+        int i = read_int(" Индекс: ");
+        try { std::cout << " [" << i << "] = " << (b->get(i).get() ? "1" : "0") << "\n"; }
+        catch (const std::exception& ex) { std::cout << " [!] " << ex.what() << "\n"; }
+        break;
+    }
+    case 7:
+        try { std::cout << " first = " << (b->get_first().get() ? "1" : "0") << "\n"; }
+        catch (const std::exception& ex) { std::cout << " [!] " << ex.what() << "\n"; }
+        break;
+    case 8:
+        try { std::cout << " last = " << (b->get_last().get() ? "1" : "0") << "\n"; }
+        catch (const std::exception& ex) { std::cout << " [!] " << ex.what() << "\n"; }
+        break;
+    case 9:
+        std::cout << " size = " << b->get_size() << "\n";
+        break;
+    case 10: {
+        int from = read_int(" От: ");
+        int to   = read_int(" До: ");
+        try { maybe_add_bit(b->get_subsequence(from, to)); }
+        catch (const std::exception& ex) { std::cout << " [!] " << ex.what() << "\n"; }
+        break;
+    }
+    case 11: {
+        maybe_add_bit(b->concat(*pick_other_bit()));
+        break;
+    }
+    case 12: {
+        int index = read_int(" Индекс (может быть отрицательным): ");
+        int count = read_int(" Количество удаляемых: ");
+        BitSequence* ins = pick_other_bit();
+        try { maybe_add_bit(b->slice(index, count, *ins)); }
+        catch (const std::exception& ex) { std::cout << " [!] " << ex.what() << "\n"; }
+        break;
+    }
+    case 13:
+        maybe_add_bit(b->map([](const Bit& x) { return ~x; }));
+        break;
+    case 14: {
+        std::cout << " 1. только 1-биты  2. только 0-биты\n";
+        bool target = (read_int(" > ") == 1);
+        maybe_add_bit(b->where(target ? where_bit_one : where_bit_zero));
+        break;
+    }
+    case 15: {
+        std::cout << " 1. AND  2. OR  3. XOR\n";
+        int choice = read_int(" > ");
+        Bit res;
+        switch (choice) {
+            case 1:  res = b->reduce([](const Bit& a, const Bit& b){ return a & b; }, Bit{true});  break;
+        case 2:  res = b->reduce([](const Bit& a, const Bit& b){ return a | b; }, Bit{false}); break;
+        default: res = b->reduce([](const Bit& a, const Bit& b){ return a ^ b; }, Bit{false}); break;
         }
-
-        case 7: {
-            int v = read_int("  Бит (0/1): ");
-            auto* res = static_cast<BitSequence*>(b->append(Bit(v != 0)));
-            maybe_add_bit(k, res, b);
-            break;
-        }
-        case 8: std::cout << *b << "\n"; break;
-        case 9: {
-            // bit map: NOT — единственная унарная трансформация
-            auto* r = static_cast<BitSequence*>(
-                b->map([](const Bit& x) { return ~x; })
-            );
-            maybe_add_bit(k, r, b);
-            break;
-        }
-        case 10: {
-            std::cout << "  1. только 1-биты  2. только 0-биты\n";
-            bool target = (read_int("  > ") == 1);
-            auto* r = static_cast<BitSequence*>(
-                b->where(target ? where_bit_one : where_bit_zero)
-            );
-            maybe_add_bit(k, r, b);
-            break;
-        }
-        default: std::cout << "  [!] Неверная операция.\n";
+        std::cout << " Результат: " << (res.get() ? "1" : "0") << "\n";
+        break;
+    }
+    case 16: { maybe_add_bit(b->bit_and (*pick_other_bit())); break; }
+    case 17: { maybe_add_bit(b->bit_or  (*pick_other_bit())); break; }
+    case 18: { maybe_add_bit(b->bit_xor (*pick_other_bit())); break; }
+    case 19: { maybe_add_bit(b->bit_not());                   break; }
+    case 20: std::cout << *b << "\n"; break;
+    default: std::cout << " [!] Неверная операция.\n";
     }
 }
 

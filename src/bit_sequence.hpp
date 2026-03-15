@@ -4,8 +4,6 @@
 #include "dynamic_array.hpp"
 #include "sequence.hpp"
 
-//TODO исправить main с битом
-//TODO написать тесты
 class BitSequence : public Sequence<Bit> {
 public:
     // constructors
