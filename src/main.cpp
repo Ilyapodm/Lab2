@@ -334,15 +334,24 @@ void cmd_seq_ops(int idx) {
             std::cout << "  1. Из реестра  2. Ввести новую временную\n";
             Sequence<int>* other = nullptr;
             bool owns = false;
+
             if (read_int("  > ") == 1) {
-                other = seq_reg[pick_seq("  Номер второй: ")]->ptr;
+                int other_idx = pick_seq("  Номер второй: ");
+                other = seq_reg[other_idx]->ptr;
+
+                // aliasing: mutable concat with this - create a copy
+                if (other == s && is_mutable(k)) {
+                    other = s->get_subsequence(0, s->get_size() - 1);
+                    owns = true;
+                }
             } else {
                 other = read_int_array();
-                owns  = true;
+                owns = true;
             }
+
             Sequence<int>* res = s->concat(*other);
             if (owns) delete other;
-            add_seq(k, res); // concat always new object
+            add_seq(k, res);
             break;
         }
         case 12:
