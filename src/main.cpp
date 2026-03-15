@@ -59,8 +59,6 @@ void scroll_up() {
 }
 
 void wait_for_enter() {
-    std::cin.clear(); // error flags
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     std::cout << "Нажмите Enter для продолжения...";
     std::cin.get();
 }
@@ -76,15 +74,32 @@ int read_int(const char* prompt = "") {
     }
 }
 
+int read_bit(const char* prompt = "") {
+    while (true) {
+        int v = read_int(prompt);
+        if (v == 0 || v == 1) return v;
+        std::cout << "  [!] Введите 0 или 1.\n";
+    }
+}
+
 void print_seq_registry() {
+    if (seq_reg.get_size() == 0) {
+        std::cout << "  (пусто)\n";
+        return;
+    }
     for (int i = 0; i < seq_reg.get_size(); i++)
-        std::cout << "  " << (i+1) << ". " << *seq_reg[i]->ptr
-                  << "  — " << seq_kind_name(seq_reg[i]->kind) << "\n";
+        std::cout << "  " << (i+1) << ".  "
+                  << *seq_reg[i]->ptr
+                  << "  [" << seq_kind_name(seq_reg[i]->kind) << "]\n";
 }
 
 void print_bit_registry() {
+    if (bit_reg.get_size() == 0) {
+        std::cout << "  (пусто)\n";
+        return;
+    }
     for (int i = 0; i < bit_reg.get_size(); i++)
-        std::cout << "  " << (i+1) << ". " << *bit_reg[i]->ptr << "\n";
+        std::cout << "  " << (i+1) << ".  " << *bit_reg[i]->ptr << "\n";
 }
 
 // Выбор индекса из реестра int-последовательностей (1-based → 0-based)
@@ -135,7 +150,12 @@ void maybe_add_bit(BitSequence* result) {
 // Reading int array
 // ============================================================
 MutableArraySequence<int>* read_int_array() {
-    int n = read_int("  Количество элементов: ");
+    int n;
+    do {
+        n = read_int(" Количество элементов: ");
+        if (n < 0) std::cout << "  [!] Количество не может быть отрицательным.\n";
+    } while (n < 0);
+
     auto* s = new MutableArraySequence<int>();
     for (int i = 0; i < n; i++) {
         std::cout << "  [" << i << "]: ";
@@ -195,8 +215,12 @@ void cmd_create_seq() {
               << "  2. Immutable ArraySequence<int>\n"
               << "  3. Mutable ListSequence<int>\n"
               << "  4. Immutable ListSequence<int>\n";
-    int choice = read_int("  > ");
-
+    int choice;
+    do {
+        choice = read_int("  > ");
+        if (choice < 1 || choice > 4)
+            std::cout << "  [!] Введите число от 1 до 4.\n";
+    } while (choice < 1 || choice > 4);
     auto* tmp = read_int_array();
     int   sz  = tmp->get_size();
     int*  raw = new int[sz];
@@ -208,17 +232,21 @@ void cmd_create_seq() {
         case 2: add_seq(SeqKind::ImmArray, new ImmutableArraySequence<int>(raw, sz)); break;
         case 3: add_seq(SeqKind::MutList,  new MutableListSequence<int>(raw, sz));    break;
         case 4: add_seq(SeqKind::ImmList,  new ImmutableListSequence<int>(raw, sz));  break;
-        default: std::cout << "  [!] Неверный выбор.\n";
     }
     delete[] raw;
 }
 
+
 void cmd_create_bit() {
-    int n = read_int("  Количество бит: ");
+    int n;
+    do {
+        n = read_int("  Количество бит: ");
+        if (n < 0) std::cout << "  [!] Количество не может быть отрицательным.\n";
+    } while (n < 0);
     bool* bits = new bool[n];
     for (int i = 0; i < n; i++) {
         std::cout << "  бит[" << i << "] (0/1): ";
-        bits[i] = (read_int() != 0);
+        bits[i] = read_bit();
     }
     add_bit(new BitSequence(bits, n));
     delete[] bits;
@@ -375,7 +403,12 @@ void cmd_seq_ops(int idx) {
         }
         case 17: {
             int index = read_int("  Индекс (может быть отрицательным): ");
-            int count = read_int("  Количество удаляемых: ");
+            int count;
+            do {
+                count = read_int("  Количество удаляемых (>= 0): ");
+                if (count < 0) std::cout << "  [!] Количество не может быть отрицательным.\n";
+            } while (count < 0);
+
             auto* ins = read_int_array();
             try {
                 Sequence<int>* res = s->slice(index, count, *ins);
@@ -453,7 +486,7 @@ void cmd_bit_ops(int idx) {
         break;
     }
     case 6: {
-        int i = read_int(" Индекс: ");
+        int i = read_bit(" Индекс: ");
         try { std::cout << " [" << i << "] = " << (b->get(i).get() ? "1" : "0") << "\n"; }
         catch (const std::exception& ex) { std::cout << " [!] " << ex.what() << "\n"; }
         break;
@@ -533,44 +566,64 @@ void remove_from(MutableArraySequence<Entry*>& reg, int idx) {
 // ============================================================
 int main() {
     while (true) {
-        std::cout << "\n===== int-последовательности =====\n";
-        print_seq_registry();
-        std::cout << "===== BitSequence =================\n";
-        print_bit_registry();
-        std::cout << "===================================\n"
-                  << "  0. Выход\n"
-                  << "  1. Создать int-последовательность\n"
-                  << "  2. Создать BitSequence\n"
-                  << "  3. Операции с int-последовательностью\n"
-                  << "  4. Операции с BitSequence\n"
-                  << "  5. Удалить int-последовательность\n"
-                  << "  6. Удалить BitSequence\n";
+        clear_screen();
 
-        switch (read_int("> ")) {
-            case 0:
-                for (int i = 0; i < seq_reg.get_size(); i++) delete seq_reg[i];
-                for (int i = 0; i < bit_reg.get_size(); i++) delete bit_reg[i];
-                return 0;
-            case 1: cmd_create_seq(); break;
-            case 2: cmd_create_bit(); break;
-            case 3:
-                if (seq_reg.get_size() == 0) { std::cout << "  (реестр пуст)\n"; break; }
-                cmd_seq_ops(pick_seq("  Выберите последовательность: "));
-                break;
-            case 4:
-                if (bit_reg.get_size() == 0) { std::cout << "  (реестр пуст)\n"; break; }
-                cmd_bit_ops(pick_bit("  Выберите BitSequence: "));
-                break;
-            case 5:
-                if (seq_reg.get_size() == 0) { std::cout << "  (реестр пуст)\n"; break; }
-                remove_from(seq_reg, pick_seq("  Номер для удаления: "));
-                break;
-            case 6:
-                if (bit_reg.get_size() == 0) { std::cout << "  (реестр пуст)\n"; break; }
-                remove_from(bit_reg, pick_bit("  Номер для удаления: "));
-                break;
-            default:
-                std::cout << "  [!] Неверная команда.\n";
+        std::cout
+            << "  ════════════════════════════════\n"
+            << "   INT-последовательности\n"
+            << "  ────────────────────────────────\n";
+        print_seq_registry();
+        std::cout
+            << "\n"
+            << "   BitSequence\n"
+            << "  ────────────────────────────────\n";
+        print_bit_registry();
+        std::cout
+            << "  ════════════════════════════════\n"
+            << "   0. Выход\n"
+            << "   1. Создать int-последовательность\n"
+            << "   2. Создать BitSequence\n"
+            << "   3. Операции с int-последовательностью\n"
+            << "   4. Операции с BitSequence\n"
+            << "   5. Удалить int-последовательность\n"
+            << "   6. Удалить BitSequence\n"
+            << "  ════════════════════════════════\n";
+
+        switch (read_int("  > ")) {
+        case 0:
+            for (int i = 0; i < seq_reg.get_size(); i++) delete seq_reg[i];
+            for (int i = 0; i < bit_reg.get_size(); i++) delete bit_reg[i];
+            clear_screen();
+            return 0;
+        case 1: clear_screen(); cmd_create_seq();   wait_for_enter(); break;
+        case 2: clear_screen(); cmd_create_bit();   wait_for_enter(); break;
+        case 3:
+            if (seq_reg.get_size() == 0) { std::cout << "  [!] Реестр пуст.\n"; wait_for_enter(); break; }
+            clear_screen();
+            cmd_seq_ops(pick_seq("  Выберите последовательность: "));
+            wait_for_enter();
+            break;
+        case 4:
+            if (bit_reg.get_size() == 0) { std::cout << "  [!] Реестр пуст.\n"; wait_for_enter(); break; }
+            clear_screen();
+            cmd_bit_ops(pick_bit("  Выберите BitSequence: "));
+            wait_for_enter();
+            break;
+        case 5:
+            if (seq_reg.get_size() == 0) { std::cout << "  [!] Реестр пуст.\n"; wait_for_enter(); break; }
+            clear_screen();
+            remove_from(seq_reg, pick_seq("  Номер для удаления: "));
+            wait_for_enter();
+            break;
+        case 6:
+            if (bit_reg.get_size() == 0) { std::cout << "  [!] Реестр пуст.\n"; wait_for_enter(); break; }
+            clear_screen();
+            remove_from(bit_reg, pick_bit("  Номер для удаления: "));
+            wait_for_enter();
+            break;
+        default:
+            std::cout << "  [!] Неверная команда.\n";
+            wait_for_enter();
         }
     }
 }
