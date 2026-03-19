@@ -1,4 +1,4 @@
-# 2 Lab O_o
+# Polymorphic abstract data types lab №2
 
 ## Как запустить
 1. Из корня проекта:
@@ -16,8 +16,9 @@ cd build && ctest --output-on-failure
 
 ## Детали реализации
 ### BitSequence
-BitSequence - конкретная реализация Sequence (Sequence\<Bit\>) с дополнительными битовыми операциями
-- BitSequence - всегда immutable (все методы возвращают новый объект)
+BitSequence - конкретная реализация Sequence (Sequence\<Bit\>) с дополнительными битовыми операциями.
+
+BitSequence - всегда immutable (все методы возвращают новый объект)
 
 ### get_subsequence()
 Результат get_subsequence() следует типу операнда (*this)
@@ -40,8 +41,26 @@ BitSequence - конкретная реализация Sequence (Sequence\<Bit\
 - IEnumerator<T> для ListSequence реализован через LinkedList (делегирование вниз). Так мы не тратим O(n) при использовании get
 
 ### Управление памятью в ArraySequence
-Управление памятью для ArraySequence делегировано вниз: в DynamicArray. Именно здесь хранятся size (количество элементов) и capacity(уже выделенные ячейки памяти под этот массив). 
+Управление памятью для ArraySequence делегировано вниз: в DynamicArray. Именно здесь хранятся size (количество элементов) и capacity(уже выделенные ячейки памяти под этот массив).
+
 #### Метод resize() в DynamicArray
 Работа с размером массива происходит всегда через этот метод.
 resize() увеличивает size на заданное количество и не меняет capacity, если size + new_size <= capacity. Если же capacity не хватает для всех size + new_size - то выделяется 2x памяти от исходного capacity, и туда копируются данные.
 PS. Если не хватит 2x capacity, то выделиться size + new_size ячеек.
+
+### Оператор []
+Оператор "[]" перегружен только для чтения, так как для immutable это означает создание новой последовательности
+### Методы split, zip, unzip
+Методы split, zip, unzip реализованы как свободные функции в utils.hpp, так кк меняют тип результата
+
+## Реализованные бонусы
+- map
+- where
+- reduce
+- zip, unzip
+- IEnumerable<>
+- IEnumerator<>
+- Option\<T\> и try-семантика
+- split
+- slice
+- Перегрузка операторов << и []

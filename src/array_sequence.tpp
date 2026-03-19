@@ -220,7 +220,6 @@ Sequence<T>* ArraySequence<T>::map(T (*mapper)(const T &element)) {
             delete inst;
         throw;
     }
-    
 
     return inst;
 }
